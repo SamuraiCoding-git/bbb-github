@@ -1,13 +1,199 @@
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@font-face {
+  font-family: 'MyCustomFont';
+  src: url('./assets/FlappyBirdRegular.ttf') format('truetype');
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+body {
+  font-family: 'MyCustomFont', 'Arial', sans-serif;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: url("./assets/background.png") repeat-x;
+  animation: scroll-right 60s linear infinite;
+}
+
+@keyframes scroll-right {
+  0% {
+    background-position: 0 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+
+.game-interface {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Centers the content horizontally */
+}
+
+.header-container, .bird-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+}
+
+.durov-button {
+  position: absolute;
+  top: 300px;
+  right: 55px;
+}
+
+.header-container, .bird-container, .game-menu-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 25px; /* adjust spacing as needed */
+}
+
+.game-menu-container {
+  flex-direction: column;
+  align-items: center;
+}
+
+.first-layer, .second-layer {
+  display: flex;
+  justify-content: space-around;
+}
+
+.menu-button {
+  margin: 5px; /* adjust spacing between buttons */
+}
+
+.leaderboard-container {
+  flex-direction: column;
+  align-items: center;
+}
+
+.close-button {
+  position: absolute;
+  top: 40px;
+  right: 50px;
+}
+
+.leaderboard-list {
+  flex-direction: column;
+  align-items: center;
+  margin-top: 140px;
+}
+
+.close-button img {
+  cursor: pointer;
+}
+
+.leaderboard-container {
+  padding: 20px;
+  border-radius: 8px;
+}
+
+.member-list {
+  width: 60%;
+  height: auto;
+  position: absolute;
+  margin-top: -232px;
+  margin-left: 150px;
+  transform: translate(-50%, -50%);
+  list-style: none;
+  color: black; /* Adjust text color based on your image */
+  font-size: 20px; /* Adjust font size as necessary */
+}
+
+.member-list li {
+  position: relative;
+}
+
+.image-container {
+  position: relative;
+  width: 125%;
+  height: auto;
+  margin-right: 50px;
+}
+
+.leaderboard-member {
+  position: relative; /* Ensure the list item serves as the positioning context */
+  display: block; /* Full width, adjust as needed */
+  margin-bottom: 15px; /* Space between items */
+}
+
+.member-name {
+  position: absolute;
+  top: 10px; /* Adjust this value to align properly */
+  left: 50%; /* Center horizontally */
+  transform: translateX(-50%); /* Center the text block */
+  color: black; /* Text color */
+  padding: 5px 10px; /* Padding around the text */
+  border-radius: 5px; /* Rounded corners */
+  font-size: 2em; /* Text size */
+  margin-left: -55px;
+  margin-top: -18px;
+}
+
+.member-score {
+  position: absolute;
+  top: 10px; /* Adjust this value to align properly */
+  left: 50%; /* Center horizontally */
+  transform: translateX(-50%); /* Center the text block */
+  color: black; /* Text color */
+  padding: 5px 10px; /* Padding around the text */
+  border-radius: 5px; /* Rounded corners */
+  font-size: 2em; /* Text size */
+  margin-left: 120px;
+  margin-top: -18px;
+  text-align: center;
+}
+
+.first-egg .name {
+  position: absolute;
+  font-size: 3em;
+  margin-top: 50px;
+  margin-left: 140px;
+}
+
+.first-egg .score {
+  position: absolute;
+  font-size: 3em;
+  margin-top: 85px;
+  margin-left: 140px;
+}
+
+.second-egg .name {
+  position: absolute;
+  font-size: 3em;
+  margin-top: 80px;
+  margin-left: 25px;
+}
+
+.second-egg .score {
+  position: absolute;
+  font-size: 3em;
+  margin-top: 120px;
+  margin-left: 25px;
+}
+
+.three-egg .name {
+  position: absolute;
+  font-size: 3em;
+  margin-top: 110px;
+  margin-left: 245px;
+}
+
+.three-egg .score {
+  position: absolute;
+  font-size: 3em;
+  margin-top: 145px;
+  margin-left: 250px;
+}
+
+.background-music {
+  position: absolute;
+  margin-left: -130px;
+}
+
+.background-music audio {
+  display: none;
 }
