@@ -5,7 +5,7 @@ import React from "react";
 
 const Achievements = () => {
     return (
-        <>
+        <div className="max-w-[720px]">
             <div className="close-button" id="achievements">
                 <CloseButton/>
             </div>
@@ -27,7 +27,7 @@ const Achievements = () => {
                     <img src={ConcealedAchievementsImage} className="concealed-image" alt=""></img>
                 </div>
             </div>
-        </>
+        </div>
     )
 }
 
