@@ -4,7 +4,8 @@
 
 @font-face {
   font-family: 'MyCustomFont';
-  src: url('./assets/FlappyBirdRegular.ttf') format('truetype');
+  src: url("../../bbb-webapp/src/assets/17634.ttf") format("truetype");
+  font-style: normal;
 }
 
 body {
@@ -12,8 +13,14 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  background: url("./assets/background.png") repeat-x;
+  background: url("../../bbb-webapp/src/assets/background.png") repeat-x;
   animation: scroll-right 60s linear infinite;
+  overflow: hidden;
+}
+
+button {
+  background-color: transparent;
+  border: none;
 }
 
 @keyframes scroll-right {
@@ -36,19 +43,22 @@ body {
 .header-container, .bird-container {
   display: flex;
   justify-content: center;
-  margin-top: 30px;
+  margin-top: 10px;
+}
+
+.bird-container {
+  margin-left: 15px;
 }
 
 .durov-button {
   position: absolute;
-  top: 300px;
-  right: 55px;
+  top: 270px;
+  right: 15px;
 }
 
 .header-container, .bird-container, .game-menu-container {
   display: flex;
-  justify-content: center;
-  margin-bottom: 25px; /* adjust spacing as needed */
+  justify-content: center; /* adjust spacing as needed */
 }
 
 .game-menu-container {
@@ -59,134 +69,123 @@ body {
 .first-layer, .second-layer {
   display: flex;
   justify-content: space-around;
+  background: none;
 }
 
 .menu-button {
   margin: 5px; /* adjust spacing between buttons */
 }
 
-.leaderboard-container {
-  flex-direction: column;
-  align-items: center;
+.close-button#leaderboard {
+  position: absolute;
+  margin-top: 40px;
+  margin-right: 10px;
 }
 
-.close-button {
+.close-button#achievements {
   position: absolute;
-  top: 40px;
-  right: 50px;
+  z-index: 1;
+  margin-top: 5px;
+  margin-left: 100px;
+}
+
+.close-button#wallet, .close-button#invite {
+  position: absolute;
+  margin-top: 20px;
+  margin-left: 100px;
 }
 
 .leaderboard-list {
-  flex-direction: column;
-  align-items: center;
-  margin-top: 140px;
+  position: absolute;
+  margin-top: 10px;
+  margin-left: -115px;
+}
+
+.leaderboard-list img {
+  position: absolute;
+  margin-top: 120px;
+}
+
+.leaderboard-eggs {
+  position: absolute;
+  margin-left: -175px;
+}
+
+.member-list {
+  position: absolute;
+  margin-left: -40px;
+  margin-top: 137px;
+  list-style: none;
+}
+
+.leaderboard-member {
+  padding: 30px;
+}
+
+.member-name {
+  position: absolute;
+  margin-top: 120px;
+  margin-left: 20px;
+  font-size: 2em;
+}
+
+.member-score {
+  position: absolute;
+  margin-top: 125px;
+  margin-left: 160px;
+  font-size: 1.5em;
+}
+
+.leaderboard-container {
+  position: absolute;
+  margin-top: 10px;
+  margin-left: -40px;
 }
 
 .close-button img {
   cursor: pointer;
 }
 
-.leaderboard-container {
-  padding: 20px;
-  border-radius: 8px;
-}
-
-.member-list {
-  width: 60%;
-  height: auto;
-  position: absolute;
-  margin-top: -232px;
-  margin-left: 150px;
-  transform: translate(-50%, -50%);
-  list-style: none;
-  color: black; /* Adjust text color based on your image */
-  font-size: 20px; /* Adjust font size as necessary */
-}
-
-.member-list li {
-  position: relative;
-}
-
-.image-container {
-  position: relative;
-  width: 125%;
-  height: auto;
-  margin-right: 50px;
-}
-
-.leaderboard-member {
-  position: relative; /* Ensure the list item serves as the positioning context */
-  display: block; /* Full width, adjust as needed */
-  margin-bottom: 15px; /* Space between items */
-}
-
-.member-name {
-  position: absolute;
-  top: 10px; /* Adjust this value to align properly */
-  left: 50%; /* Center horizontally */
-  transform: translateX(-50%); /* Center the text block */
-  color: black; /* Text color */
-  padding: 5px 10px; /* Padding around the text */
-  border-radius: 5px; /* Rounded corners */
-  font-size: 2em; /* Text size */
-  margin-left: -55px;
-  margin-top: -18px;
-}
-
-.member-score {
-  position: absolute;
-  top: 10px; /* Adjust this value to align properly */
-  left: 50%; /* Center horizontally */
-  transform: translateX(-50%); /* Center the text block */
-  color: black; /* Text color */
-  padding: 5px 10px; /* Padding around the text */
-  border-radius: 5px; /* Rounded corners */
-  font-size: 2em; /* Text size */
-  margin-left: 120px;
-  margin-top: -18px;
-  text-align: center;
-}
-
 .first-egg .name {
   position: absolute;
-  font-size: 3em;
+  font-size: 2em;
   margin-top: 50px;
-  margin-left: 140px;
+  margin-left: 175px;
 }
 
 .first-egg .score {
   position: absolute;
-  font-size: 3em;
+  font-size: 2em;
   margin-top: 85px;
-  margin-left: 140px;
+  margin-left: 175px;
 }
 
 .second-egg .name {
   position: absolute;
-  font-size: 3em;
+  font-size: 1.75em;
   margin-top: 80px;
-  margin-left: 25px;
+  margin-left: 80px;
 }
 
 .second-egg .score {
   position: absolute;
-  font-size: 3em;
+  font-size: 1.75em;
   margin-top: 120px;
-  margin-left: 25px;
+  margin-left: 90px;
 }
 
 .three-egg .name {
   position: absolute;
-  font-size: 3em;
+  font-size: 1.5em;
   margin-top: 110px;
-  margin-left: 245px;
+  margin-left: 280px;
 }
 
 .three-egg .score {
   position: absolute;
-  font-size: 3em;
+  font-size: 1.5em;
   margin-top: 145px;
-  margin-left: 250px;
+  margin-left: 280px;
 }
 
 .background-music {
@@ -196,4 +195,86 @@ body {
 
 .background-music audio {
   display: none;
+}
+
+.achievements-window {
+  position: absolute;
+  margin-left: -180px;
+  margin-top: 70px;
+}
+
+.concealed-image {
+  padding: 10px;
+}
+
+.ton-connect {
+  position: absolute;
+  margin-top: 300px;
+  margin-left: -80px;
+
+}
+
+.achievements-header span{
+  position: absolute;
+  font-size: 5em;
+  margin-left: -45px;
+  margin-top: 70px;
+  z-index: 1;
+}
+
+.achievements-list {
+  position: absolute;
+  margin-left: -165px;
+  margin-top: 170px;
+  list-style: none;
+}
+
+.App {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  background-color: #70c5ce;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.bird {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  background-color: yellow;
+  border-radius: 50%;
+  transition: top 0.1s ease-out;
+}
+
+.pipe {
+  position: absolute;
+  width: 100px;
+  height: 600px;
+  background-color: green;
+}
+
+.score {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  font-size: 24px;
+  font-weight: bold;
+  color: white;
+}
+
+.game-over {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.game-over-message {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  color: white;
+  font-size: 36px;
+  font-weight: bold;
+  text-align: center;
 }
