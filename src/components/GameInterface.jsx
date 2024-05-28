@@ -1,5 +1,5 @@
 import React from 'react';
-import BirdImage from "../assets/bird.png";
+import BirdImage from "../assets/1.svg";
 import HeaderImage from "../assets/header.svg";
 import PlayImage from "../assets/play-button.svg";
 import NoAchievementImage from "../assets/no-achievement-button.svg";
@@ -38,7 +38,10 @@ const GameInterface = () => {
                     <img src={HeaderImage} id="header-image" alt="Header" />
                 </div>
                 <div className="bird-container">
-                    <img src={BirdImage} id="bird-image" alt="Bird" />
+                    <div id="bird-animation">
+                        <img src={BirdImage} id="bird-image" alt="Bird"/>
+                    </div>
+                    {/*<img src={BirdImage} id="bird-image" alt="Bird"/>*/}
                 </div>
                 <div className="game-menu-container">
                     <div className="first-layer">

@@ -19,7 +19,7 @@ const GameAudioComponent = () => {
 
     return (
         <div className="background-music">
-            <button className="button-mute" onClick={toggleAudio}>
+            <button className="button-mute ml-[50px]" onClick={toggleAudio}>
                 <img src={isPlaying ? On : Off} alt="Toggle Audio" />
             </button>
             <audio id="background-audio" loop>

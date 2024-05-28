@@ -3,6 +3,8 @@ canvas {
   background-color: #70c5ce; /* Light blue sky background */
   width: 100vw;
   height: 100vh;
+  margin: 0;
+  padding: 0;
   outline: none; /* Removes the outline when the canvas is focused */
 }
 .app {

@@ -64,6 +64,26 @@ canvas {
   margin-left: 15px;
 }
 
+#bird-image {
+  visibility: hidden;
+}
+
+#bird-animation {
+  animation: birdAnimation 0.6s steps(6) infinite;
+  background-size: cover;
+  background-position: center;
+}
+
+@keyframes birdAnimation {
+  0% { background-image: url('./assets/1.svg'); }
+  16.67% { background-image: url('./assets/2.svg'); }
+  33.33% { background-image: url('./assets/3.svg'); }
+  50% { background-image: url('./assets/4.svg'); }
+  66.67% { background-image: url('./assets/5.svg'); }
+  83.33% { background-image: url('./assets/6.svg'); }
+  100% { background-image: url('./assets/1.svg'); }
+}
+
 .durov-button {
   position: absolute;
   top: 270px;
@@ -90,18 +110,11 @@ canvas {
   margin: 5px; /* adjust spacing between buttons */
 }
 
-.close-button#leaderboard {
-  position: absolute;
-  margin-top: 40px;
-  margin-right: 10px;
-}
-
 .close-button#achievements {
   position: absolute;
-  z-index: 1;
-  margin-top: 5px;
   margin-left: 100px;
 }
+
 
 .close-button#wallet, .close-button#invite {
   position: absolute;

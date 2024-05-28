@@ -14,7 +14,7 @@ const Leaderboard = () => {
         { name: "Grace", score: 2000 }
     ]);
 
-const formatScore = (num) => {
+    const formatScore = (num) => {
         if (num > 1000000000) {
             return `${(num / 1000000000).toFixed(1)}B`;
         }
@@ -47,14 +47,13 @@ const formatScore = (num) => {
     const topFiveMembers = members.sort((a, b) => b.score - a.score).slice(0, 5);
     const topThreeMembers = members.sort((a, b) => b.score - a.score).slice(0, 3);
     return (
-        <div className="max-w-[320px] h-screen relative w-screen">
-            <div className="absolute right-0 top-0 z-10" id="leaderboard">
+        <div className="relative max-w-[320px] h-screen w-screen">
+            <div className="absolute top-4 right-4 z-10">
                 <CloseButton/>
             </div>
             <div className="absolute left-1/2 transform -translate-x-1/2 ">
-                
                 <img src={LeaderboardImage} className="relative mt-[96px] w-[310px] left-1/2 transform -translate-x-1/2" alt="Leaderboard"/>
-                
+
                 <ul className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-[calc(50%-100px)] w-full max-w-[310px]">
                     {topFiveMembers.map((member, index) => (
                         <li key={index} className="relative flex flex-col justify-center items-center py-2">
@@ -73,12 +72,12 @@ const formatScore = (num) => {
                     ))}
                 </ul>
 
-                <div className="absolute top-8 left-1/2 trasform -translate-x-1/2 w-full flex justify-between px-5">
+                <div className="absolute top-8 left-1/2 transform -translate-x-1/2 w-full flex justify-between px-5">
                     <div className="flex flex-col mt-6 w-full truncate overflow-clip text-center">
                         <span className="name text-2xl font-bold">
                             {formatText(formatText(topThreeMembers[1].name))}
                         </span>
-                            <span className="!text-black font-bold">
+                        <span className="!text-black font-bold">
                             {formatText(formatScore(topThreeMembers[1].score))}
                         </span>
                     </div>
@@ -86,7 +85,7 @@ const formatScore = (num) => {
                         <span className="name text-2xl font-bold">
                             {formatText(formatText(topThreeMembers[0].name))}
                         </span>
-                            <span className="!text-black font-bold">
+                        <span className="!text-black font-bold">
                             {formatText(formatScore(topThreeMembers[0].score))}
                         </span>
                     </div>
@@ -94,7 +93,7 @@ const formatScore = (num) => {
                         <span className="name text-2xl font-bold">
                             {formatText(formatText(topThreeMembers[2].name))}
                         </span>
-                            <span className="!text-black font-bold">
+                        <span className="!text-black font-bold">
                             {formatText(formatScore(topThreeMembers[2].score))}
                         </span>
                     </div>

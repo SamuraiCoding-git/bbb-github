@@ -1,0 +1,2 @@
+class GameRepo(BaseRepo):
+    pass
