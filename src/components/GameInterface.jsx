@@ -32,18 +32,17 @@ const GameInterface = () => {
     };
 
     return (
-        <>
+        <div className="ml-[70px]">
             <div className="game-interface">
                 <div className="header-container">
                     <img src={HeaderImage} id="header-image" alt="Header" />
                 </div>
-                <div className="bird-container">
+                <div className="bird-container pt-[30px]">
                     <div id="bird-animation">
-                        <img src={BirdImage} id="bird-image" alt="Bird"/>
+                        <img src={BirdImage} id="bird-image" alt="GetReady"/>
                     </div>
-                    {/*<img src={BirdImage} id="bird-image" alt="Bird"/>*/}
                 </div>
-                <div className="game-menu-container">
+                <div className="game-menu-container mt-[60px]">
                     <div className="first-layer">
                         <button className="menu-button" onClick={goToGame}>
                             <img src={PlayImage} alt="Play" />
@@ -65,7 +64,7 @@ const GameInterface = () => {
                     </div>
                 </div>
             </div>
-        </>
+        </div>
     );
 };
 

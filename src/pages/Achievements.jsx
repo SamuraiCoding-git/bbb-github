@@ -5,7 +5,7 @@ import React from "react";
 
 const Achievements = () => {
     return (
-        <div className="max-w-[720px] mt-[15px]">
+        <div className="max-w-[720px] mt-[15px] ml-[195px]">
             <div className="close-button" id="achievements">
                 <CloseButton/>
             </div>

@@ -16,6 +16,7 @@ body {
   background: url("./assets/background.png") repeat-x;
   animation: scroll-right 60s linear infinite;
   overflow: hidden;
+  position: fixed;
 }
 
 button {
@@ -69,7 +70,7 @@ canvas {
 }
 
 #bird-animation {
-  animation: birdAnimation 0.6s steps(6) infinite;
+  animation: birdAnimation 0.45s steps(6) infinite;
   background-size: cover;
   background-position: center;
 }
@@ -262,4 +263,18 @@ canvas {
   font-size: 36px;
   font-weight: bold;
   text-align: center;
+}
+
+@keyframes scroll-left {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-45%);
+  }
+}
+
+.game-foreground img {
+  animation: scroll-left 4s linear infinite;
+  width: 800px;
 }

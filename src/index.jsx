@@ -9,7 +9,8 @@ import Achievements from "./pages/Achievements";
 import Wallet from "./pages/Wallet";
 import {THEME, TonConnectUIProvider} from "@tonconnect/ui-react";
 import Invite from "./pages/Invite";
-import Game from './pages/Game';
+import Durov from "./pages/Durov";
+import Game from "./pages/Game";
 
 function App() {
     return (
@@ -22,6 +23,7 @@ function App() {
                 <Route path="/invite" element={<Invite />} />
                 <Route path="/wallet" element={<Wallet />} />
                 <Route path="/game" element={<Game />} />
+                <Route path="/durov" element={<Durov />}/>
             </Routes>
         </Router>
     );

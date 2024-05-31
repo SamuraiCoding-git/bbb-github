@@ -1,16 +1,18 @@
 import React from 'react';
+import styled from 'styled-components';
 
-const Bird = React.forwardRef(({ birdPosition }, ref) => {
-    return (
-        <div
-            ref={ref}
-            className="bird"
-            style={{
-                left: `${birdPosition.x}px`,
-                top: `${birdPosition.y}px`,
-            }}
-        ></div>
-    );
-});
+const BirdStyled = styled.div`
+  width: 30px;
+  height: 30px;
+  background-color: yellow;
+  position: absolute;
+  top: ${(props) => props.position}px;
+  left: 100px;
+  border-radius: 50%;
+`;
+
+const Bird = ({ position }) => {
+    return <BirdStyled position={position} />;
+};
 
 export default Bird;

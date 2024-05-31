@@ -4,7 +4,7 @@ from sqlalchemy.orm import mapped_column, Mapped
 from infrastructure.database.models.base import Base, TimestampMixin, TableNameMixin
 
 
-class Game(Base, TimestampMixin, TableNameMixin):
+class GameOld(Base, TimestampMixin, TableNameMixin):
     __tablename__ = "users"
     user_id: Mapped[int] = mapped_column(BIGINT, ForeignKey('users.user_id'), primary_key=True, autoincrement=False, unique=True)
     durov_skin: Mapped[bool] = mapped_column(Boolean, default=False)

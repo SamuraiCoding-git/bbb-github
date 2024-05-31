@@ -47,11 +47,11 @@ const Leaderboard = () => {
     const topFiveMembers = members.sort((a, b) => b.score - a.score).slice(0, 5);
     const topThreeMembers = members.sort((a, b) => b.score - a.score).slice(0, 3);
     return (
-        <div className="relative max-w-[320px] h-screen w-screen">
+        <div className="relative max-w-[320px] h-screen w-screen ml-[35px]">
             <div className="absolute top-4 right-4 z-10">
                 <CloseButton/>
             </div>
-            <div className="absolute left-1/2 transform -translate-x-1/2 ">
+            <div className="absolute left-1/2 transform -translate-x-1/2">
                 <img src={LeaderboardImage} className="relative mt-[96px] w-[310px] left-1/2 transform -translate-x-1/2" alt="Leaderboard"/>
 
                 <ul className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-[calc(50%-100px)] w-full max-w-[310px]">

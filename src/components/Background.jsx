@@ -1,20 +1,14 @@
 import React from 'react';
+import dayImage from '../assets/background.svg';
 
-const Background = ({ ctx, night, width, height }) => {
-    const dayImage = new Image();
-    const nightImage = new Image();
-    dayImage.src = '../assets/background.svg';
-    nightImage.src = '../assets/foreground.svg';
-
-    dayImage.onload = () => {
-        ctx.drawImage(dayImage, 0, 0, width, height);
-    };
-
-    nightImage.onload = () => {
-        ctx.drawImage(nightImage, 0, 0, width, height);
-    };
-
-    return null;
+const Background = () => {
+    return (
+        <div className="relative max-w-[720px] h-screen w-screen z-10">
+            <div className="game-background z-10">
+                <img src={dayImage} alt="" className="ml-[-250px] mt-[-750px]"></img>
+            </div>
+        </div>
+    )
 };
 
 export default Background;
