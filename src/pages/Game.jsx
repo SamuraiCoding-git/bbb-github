@@ -1,135 +1,138 @@
-import React, { useEffect, useRef, useState } from 'react';
-import birdImg from '../assets/img/bird.png';
-import bgImg from '../assets/img/bg.png';
-import fgImg from '../assets/img/fg.png';
-import pipeUpImg from '../assets/img/pipeUp.png';
-import pipeBottomImg from '../assets/img/pipeBottom.png';
-import flySound from '../assets/audio/fly.mp3';
-import scoreSound from '../assets/audio/score.mp3';
+import BirdImage from "../assets/1.svg";
+import React, {useState, useEffect, useRef} from "react";
+import ForegroundImage from "../assets/foreground.svg";
+import dayImage from "../assets/background.svg";
+import topPipeImage from "../assets/pipe-top.png";
+import bottomPipeImage from "../assets/pipe-bottom.svg";
 
-function Game() {
-    const canvasRef = useRef(null);
+const Game = () => {
+    const [isGame, setIsGame] = useState(false);
     const [score, setScore] = useState(0);
-    const [gameOver, setGameOver] = useState(false);
-    const flySoundRef = useRef(new Audio(flySound));
-    const scoreSoundRef = useRef(new Audio(scoreSound));
+    const [birdPosition, setBirdPosition] = useState(100);
+    const [birdRotation, setBirdRotation] = useState(0); // New state for bird rotation
+    const [pipePosition, setPipePosition] = useState(320);
+    const [pipeHeight, setPipeHeight] = useState({ top: -300, bottom: 300 });
+
+    const topBoundary = -300;
+    const bottomBoundary = 250;
+    const pipeWidth = 50;
+    const birdRef = useRef(null);
+    const upperDivRef = useRef(null);
+    const lowerDivRef = useRef(null);
 
     useEffect(() => {
-        const cvs = canvasRef.current;
-        const ctx = cvs.getContext('2d');
+        let gravityInterval;
+        let pipeInterval;
+        if (isGame) {
+            gravityInterval = setInterval(() => {
+                setBirdPosition((prevPosition) => {
+                    const newPosition = prevPosition + 5;
+                    if (newPosition >= bottomBoundary) {
+                        setIsGame(false);
+                        setScore(0);
+                        return bottomBoundary;
+                    }
+                    return newPosition;
+                });
+                setBirdRotation((prevRotation) => Math.min(prevRotation + 5, 90)); // Rotate the bird downwards
+            }, 30);
 
-        const bird = new Image();
-        const bg = new Image();
-        const fg = new Image();
-        const pipeUp = new Image();
-        const pipeBottom = new Image();
+            pipeInterval = setInterval(() => {
+                setPipePosition((prevPosition) => {
+                    const newPosition = prevPosition - 5;
+                    if (newPosition <= -pipeWidth) {
+                        setPipePosition(320);
+                        setPipeHeight({ top: Math.random() * 200 + 100, bottom: Math.random() * 200 + 200 });
+                        setScore((prevScore) => prevScore + 1); // Increase score when bird passes a pipe
+                    }
+                    return newPosition;
+                });
+            }, 30);
 
-        bird.src = birdImg;
-        bg.src = bgImg;
-        fg.src = fgImg;
-        pipeUp.src = pipeUpImg;
-        pipeBottom.src = pipeBottomImg;
+            return () => {
+                clearInterval(gravityInterval);
+                clearInterval(pipeInterval);
+            };
+        }
+    }, [isGame, birdPosition, pipePosition]);
 
-        const gap = 90;
-        const pipe = [];
-        pipe[0] = {
-            x: cvs.width,
-            y: 0
-        };
 
-        let xPos = 10;
-        let yPos = 150;
-        const grav = 1.5;
-
-        const moveUp = () => {
-            yPos -= 25;
-            flySoundRef.current.play();
-        };
-
-        document.addEventListener('keydown', moveUp);
-
-        const draw = () => {
-            ctx.drawImage(bg, 0, 0);
-
-            for (let i = 0; i < pipe.length; i++) {
-                ctx.drawImage(pipeUp, pipe[i].x, pipe[i].y);
-                ctx.drawImage(pipeBottom, pipe[i].x, pipe[i].y + pipeUp.height + gap);
-
-                pipe[i].x--;
-
-                if (pipe[i].x === 125) {
-                    pipe.push({
-                        x: cvs.width,
-                        y: Math.floor(Math.random() * pipeUp.height) - pipeUp.height
-                    });
-                }
-
-                if (
-                    (xPos + bird.width >= pipe[i].x &&
-                        xPos <= pipe[i].x + pipeUp.width &&
-                        (yPos <= pipe[i].y + pipeUp.height ||
-                            yPos + bird.height >= pipe[i].y + pipeUp.height + gap)) ||
-                    yPos + bird.height >= cvs.height - fg.height
-                ) {
-                    setGameOver(true);
-                }
-
-                if (pipe[i].x === 5) {
-                    setScore((prevScore) => prevScore + 1);
-                    scoreSoundRef.current.play();
-                }
+    const handleJump = () => {
+        if (!isGame) {
+            setIsGame(true);
+            setBirdPosition(100);
+        }
+        setBirdPosition((prevPosition) => {
+            const newPosition = prevPosition - 50;
+            if (newPosition <= topBoundary) {
+                setIsGame(false);
+                setScore(0);
+                return topBoundary;
             }
-
-            ctx.drawImage(fg, 0, cvs.height - fg.height);
-            ctx.drawImage(bird, xPos, yPos);
-
-            yPos += grav;
-
-            ctx.fillStyle = '#000';
-            ctx.font = '24px Verdana';
-            ctx.fillText('Score: ' + score, 10, cvs.height - 20);
-
-            if (!gameOver) {
-                requestAnimationFrame(draw);
-            }
-        };
-
-        pipeBottom.onload = draw;
-
-        return () => {
-            document.removeEventListener('keydown', moveUp);
-        };
-    }, [score, gameOver]);
+            return newPosition;
+        });
+        setBirdRotation(-20);
+    };
 
     return (
-        <div style={styles.container}>
-            <canvas ref={canvasRef} width="288" height="512" style={styles.canvas}></canvas>
-            {gameOver && (
-                <div style={styles.gameOver}>
-                    <h1>Game Over</h1>
-                    <p>Score: {score}</p>
-                    <button onClick={() => window.location.reload()}>Restart</button>
+        <div className="relative max-w-[720px] ml-[150px]" onClick={handleJump}>
+            {isGame && (
+                <div className="game-score z-50 relative">
+                    <div className="absolute w-full mt-[130px] ml-[-175px]">
+                        <span className="absolute mt-[100px] left-1/2 transform -translate-x-1/2 text-white text-5xl font-bold relative">
+                            <span className="absolute inset-0 text-black transform translate-x-[2px] translate-y-[2px]">
+                                {score}
+                            </span>
+                            {score}
+                        </span>
+                    </div>
                 </div>
             )}
+            <div className="game-get-ready z-40 relative">
+                <div id="game-bird-animation">
+                    <img
+                        src={BirdImage}
+                        alt=""
+                        id="game-bird-image"
+                        className="z-40 absolute top-1/2 transform -translate-y-1/2 mt-[280px] ml-[20px] scale-50"
+                        style={{ top: birdPosition, transform: `rotate(${birdRotation}deg)` }} // Apply rotation
+                    ></img>
+                </div>
+            </div>
+            <div className="game-pipe z-20 relative">
+                <div
+                    style={{
+                        position: 'absolute',
+                        left: pipePosition,
+                        height: pipeHeight.top,
+                        top: `-35px`,
+                        width: '50px',
+                        backgroundColor: 'transparent',
+                        backgroundImage: `url(${topPipeImage})`,
+                        backgroundSize: 'cover'
+                    }}
+                />
+                <div
+                    style={{
+                        position: 'absolute',
+                        left: pipePosition,
+                        height: pipeHeight.bottom,
+                        top: `${700 - pipeHeight.bottom}px`,
+                        width: '50px',
+                        backgroundColor: 'transparent',
+                        backgroundImage: `url(${bottomPipeImage})`,
+                        backgroundSize: 'cover'
+                    }}
+                />
+            </div>
+            <div className="game-foreground z-30 relative">
+                <img src={ForegroundImage} alt="" className="mt-[595px] ml-[-170px] absolute z-20"></img>
+            </div>
+            <div className="game-background z-10 relative">
+                <img src={dayImage} alt="" className="ml-[-250px] mt-[-5px]"></img>
+            </div>
         </div>
     );
-}
-
-const styles = {
-    container: {
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: '100vh',
-        background: '#f0f0f0',
-    },
-    canvas: {
-        border: '1px solid #000',
-    },
-    gameOver: {
-        textAlign: 'center',
-    },
 };
 
 export default Game;
