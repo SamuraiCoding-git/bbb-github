@@ -65,15 +65,15 @@ const GameInterface = () => {
                         </button>
                     </div>
                     <div className="second-layer">
-                        <button className="menu-button" onClick={goToLeaderboard}>
+                        {/* <button className="menu-button" onClick={goToLeaderboard}>
                             <img src={LeaderboardImage} alt="Leaderboard" />
-                        </button>
+                        </button> */}
                         <button className="menu-button" onClick={goToInvite}>
                             <img src={InviteImage} alt="Invite" />
                         </button>
-                        <button className="menu-button" onClick={goToWallet}>
+                        {/* <button className="menu-button" onClick={goToWallet}>
                             <img src={WalletImage} alt="Wallet" />
-                        </button>
+                        </button> */}
                     </div>
                 </div>
             </div>
