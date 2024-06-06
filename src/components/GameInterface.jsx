@@ -8,7 +8,7 @@ import InviteImage from "../assets/invite-button.svg";
 import WalletImage from "../assets/wallet-button.svg";
 import SelectSound from "../assets/audio/select.wav";
 import { useNavigate } from "react-router-dom";
-import Durov from "./Durov";
+// import Durov from "./Durov";
 
 const GameInterface = () => {
     const navigate = useNavigate();
@@ -46,7 +46,7 @@ const GameInterface = () => {
     return (
         <div className="ml-[70px]">
             <div className="game-interface">
-                <Durov />
+                {/* <Durov /> */}
                 <div className="header-container">
                     <img src={HeaderImage} id="header-image" alt="Header" />
                 </div>

@@ -19,6 +19,11 @@ const Invite = () => {
         return null;
     };
 
+    const handleInviteClick = () => {
+        const link = `https://t.me/share/url?text=&url=https://t.me/big_balls_birds_bot?start=${getUserId()}`;
+        openExternalLink(link);
+    };
+
     return (
         <div className="relative flex flex-col items-center justify-start h-screen w-screen max-w-[574px]">
             <header className="flex justify-end w-full p-4">
@@ -40,7 +45,7 @@ const Invite = () => {
                             <img src={InviteTermsWindow} alt="" className="absolute w-[265px] h-[108px] top-0 z-10" />
                     </div>
                     
-                    <button onClick={openExternalLink(`https://t.me/share/url?text=&url=https://t.me/big_balls_birds_bot?start=${getUserId()}`)} className="absolute w-[248px] h-[54px] top-[250px]">
+                    <button onClick={handleInviteClick} className="absolute w-[248px] h-[54px] top-[250px]">
                             <img
                                 src={InviteFriendsButton}
                                 alt="Invite Friends"

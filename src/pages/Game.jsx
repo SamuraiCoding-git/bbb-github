@@ -20,11 +20,11 @@ import GameOver from "../components/GameOver";
 
 const mapFolder = [
     { fg: ForegroundImageClassic, bg: BackgroundImageClassic, pipe: PipeImageClassic, colour: "#00cbff" },
-    { fg: ForegroundImageMexico, bg: BackgroundImageMexico, pipe: PipeImageMexico, colour: "#E56C64" },
+    // { fg: ForegroundImageMexico, bg: BackgroundImageMexico, pipe: PipeImageMexico, colour: "#E56C64" },
     { fg: ForegroundImageWinter, bg: BackgroundImageWinter, pipe: PipeImageWinter, colour: "#22F7FF" }
 ];
 
-const assetsIndex = Math.round(Math.random() * 2);
+const assetsIndex = Math.round(Math.random());
 
 const useCollisionDetection = (birdPosition, pipes, gameWidth, gameHeight, foregroundHeight, callback) => {
     useEffect(() => {
@@ -91,7 +91,7 @@ const Game = () => {
     const [pipes, setPipes] = useState([{ top: Math.floor(Math.random() * 51) - 130, left: 100 }]);
     const [gameWidth, setGameWidth] = useState(0);
     const [gameHeight, setGameHeight] = useState(0);
-    const [birdPosition, setBirdPosition] = useState({ top: 450, left: 100 });
+    const [birdPosition, setBirdPosition] = useState({ top: 350, left: 100 });
     const [birdVelocity, setBirdVelocity] = useState(0);
     const [birdRotation, setBirdRotation] = useState(0);
     const [currentBirdIndex, setCurrentBirdIndex] = useState(0);
@@ -102,7 +102,7 @@ const Game = () => {
 
     const restartGame = () => {
         setPipes([{ top: Math.floor(Math.random() * 51) - 130, left: 100 }]);
-        setBirdPosition({ top: 450, left: 100 });
+        setBirdPosition({ top: 200, left: 100 });
         setBirdVelocity(0);
         setBirdRotation(0);
         setCurrentBirdIndex(0);
