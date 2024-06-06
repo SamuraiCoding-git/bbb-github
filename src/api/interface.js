@@ -46,6 +46,19 @@ function patch(path, data) {
     });
 }
 
+function del(path) {
+    return fetch(`${baseUrl}${path}`, {
+        method: "DELETE",
+        credentials: 'include'
+    }).then(res => res.json()).then(res => {
+        if (res.statusCode === 200) {
+            return res;
+        }
+        console.log(res.message);
+        throw new Error(res.message);
+    });
+}
+
 const api = {
     user: {
         getUser: (id) => get(`/users/get_user/${id}`),
@@ -57,10 +70,18 @@ const api = {
     },
     betaGame: {
         getOrCreateUserBeta: (betaData) => post(`/betagame/get_or_create_user_beta`, betaData),
-        selectUser: (userId) => get(`/betagame/select_user/${userId}`),
+        getUser: (userId) => get(`/betagame/select_user/${userId}`),
         updateRecord: (userId, record) => patch(`/betagame/update_record/${userId}`, { record }),
         incrementGamesCount: (userId) => patch(`/betagame/increment_games_count/${userId}`),
         incrementTransactions: (userId, amount) => patch(`/betagame/increment_transactions/${userId}`, { amount })
+    },
+    balls: {
+        getOrCreateBalls: (ballsData) => post(`/balls/get_or_create_balls`, ballsData),
+        getBalls: (userId) => get(`/balls/get_balls/${userId}`),
+        updateDailyLogin: (userId, dailyLogin) => patch(`/balls/update_daily_login/${userId}`, { daily_login: dailyLogin }),
+        updateDailyLoginHundred: (userId, dailyLoginHundred) => patch(`/balls/update_daily_login_hundred/${userId}`, { daily_login_hundred: dailyLoginHundred }),
+        updateDailyLimit: (userId, decrement) => patch(`/balls/update_daily_limit/${userId}`, { decrement }),
+        deleteBalls: (userId) => del(`/balls/delete_balls/${userId}`)
     }
 };
 

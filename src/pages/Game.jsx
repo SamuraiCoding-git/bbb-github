@@ -196,7 +196,6 @@ const Game = () => {
     };
 
     useCollisionDetection(birdPosition, pipes, gameWidth, gameHeight, foregroundRef.current ? foregroundRef.current.clientHeight : 0, handleCollision);
-
     return (
         <div className="gameWrapper relative max-w-[550px] w-[100vw] h-[100vh]" onClick={handleJump}>
             {isGameOver && <GameOver onRestart={restartGame} />}

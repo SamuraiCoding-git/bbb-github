@@ -9,9 +9,11 @@ from starlette.responses import JSONResponse
 from config.config import load_config
 from infrastructure.database.models.users import User
 from infrastructure.database.models.beta import BetaGame
+from infrastructure.database.models.balls import Balls
 from infrastructure.database.repo.requests import RequestsRepo
 from infrastructure.database.repo.users import UserRepo
 from infrastructure.database.repo.beta import BetaRepo
+from infrastructure.database.repo.balls import BallsRepo
 from infrastructure.database.setup import create_engine, create_session_pool
 
 from pydantic import BaseModel
@@ -46,6 +48,13 @@ class BetaGameBase(BaseModel):
     games_count: Optional[int] = 0
     pipes_count: Optional[int] = 0
     record: Optional[int] = 0
+
+
+class BallsBase(BaseModel):
+    user_id: int
+    daily_login: Optional[bool] = False
+    daily_login_hundred: Optional[bool] = False
+    daily_limit: Optional[int] = 1500
 
 
 @app.get("/api/users/get_user/{id}")
@@ -218,6 +227,91 @@ async def increment_transactions(user_id: int, amount: int):
         try:
             new_transactions = await repo.increment_transactions(user_id, amount)
             return JSONResponse(status_code=200, content={"transactions": new_transactions})
+        except ValueError as e:
+            raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.post("/api/balls/get_or_create_balls")
+async def get_or_create_balls(balls_data: BallsBase):
+    async with engine.begin() as conn:
+        await conn.run_sync(Balls.metadata.create_all, checkfirst=True)
+    async with session_pool() as session:
+        repo = BallsRepo(session)
+        balls = await repo.get_or_create_balls(
+            user_id=balls_data.user_id,
+            daily_login=balls_data.daily_login,
+            daily_login_hundred=balls_data.daily_login_hundred,
+            daily_limit=balls_data.daily_limit
+        )
+        return JSONResponse(status_code=200, content={"user_id": balls.user_id})
+
+
+@app.get("/api/balls/get_balls/{user_id}")
+async def get_balls(user_id: int):
+    async with engine.begin() as conn:
+        await conn.run_sync(Balls.metadata.create_all, checkfirst=True)
+    async with session_pool() as session:
+        repo = BallsRepo(session)
+        balls = await repo.get_balls_by_user_id(user_id)
+        if not balls:
+            raise HTTPException(status_code=404, detail="Balls not found for user_id")
+        balls_data = BallsBase(
+            user_id=balls.user_id,
+            daily_login=balls.daily_login,
+            daily_login_hundred=balls.daily_login_hundred,
+            daily_limit=balls.daily_limit
+        )
+        return JSONResponse(status_code=200, content=balls_data.dict())
+
+
+@app.patch("/api/balls/update_daily_login/{user_id}")
+async def update_daily_login(user_id: int, daily_login: bool):
+    async with engine.begin() as conn:
+        await conn.run_sync(Balls.metadata.create_all, checkfirst=True)
+    async with session_pool() as session:
+        repo = BallsRepo(session)
+        try:
+            new_daily_login = await repo.update_daily_login(user_id, daily_login)
+            return JSONResponse(status_code=200, content={"daily_login": new_daily_login})
+        except ValueError as e:
+            raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.patch("/api/balls/update_daily_login_hundred/{user_id}")
+async def update_daily_login_hundred(user_id: int, daily_login_hundred: bool):
+    async with engine.begin() as conn:
+        await conn.run_sync(Balls.metadata.create_all, checkfirst=True)
+    async with session_pool() as session:
+        repo = BallsRepo(session)
+        try:
+            new_daily_login_hundred = await repo.update_daily_login_hundred(user_id, daily_login_hundred)
+            return JSONResponse(status_code=200, content={"daily_login_hundred": new_daily_login_hundred})
+        except ValueError as e:
+            raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.patch("/api/balls/update_daily_limit/{user_id}")
+async def update_daily_limit(user_id: int, decrement: int):
+    async with engine.begin() as conn:
+        await conn.run_sync(Balls.metadata.create_all, checkfirst=True)
+    async with session_pool() as session:
+        repo = BallsRepo(session)
+        try:
+            previous_limit = await repo.update_daily_limit(user_id, decrement)
+            return JSONResponse(status_code=200, content={"previous_limit": previous_limit})
+        except ValueError as e:
+            raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.delete("/api/balls/delete_balls/{user_id}")
+async def delete_balls(user_id: int):
+    async with engine.begin() as conn:
+        await conn.run_sync(Balls.metadata.create_all, checkfirst=True)
+    async with session_pool() as session:
+        repo = BallsRepo(session)
+        try:
+            await repo.delete_balls(user_id)
+            return JSONResponse(status_code=200, content={"message": "Balls record deleted"})
         except ValueError as e:
             raise HTTPException(status_code=404, detail=str(e))
 
