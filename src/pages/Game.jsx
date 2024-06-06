@@ -38,7 +38,6 @@ const useCollisionDetection = (birdPosition, pipes, gameWidth, gameHeight, foreg
 
             const gap = gameHeight - 2 * 270;
 
-            // Check collision with pipes
             for (let pipe of pipes) {
                 const upperPipeRect = {
                     left: pipe.left * gameWidth / 100,
@@ -54,20 +53,13 @@ const useCollisionDetection = (birdPosition, pipes, gameWidth, gameHeight, foreg
                     bottom: gameHeight - foregroundHeight
                 };
 
-                if (isOverlapping(birdRect, upperPipeRect) || isOverlapping(birdRect, lowerPipeRect)) {
+                if (isOverlapping(birdRect, lowerPipeRect) || isOverlapping(birdRect, upperPipeRect) ) {
                     callback();
                     return;
                 }
             }
 
-            // Check collision with ceiling
-            if (birdRect.top === 0) {
-                callback();
-                return;
-            }
-
-            // Check collision with foreground
-            if (birdRect.bottom === gameHeight - foregroundHeight) {
+            if (birdPosition.top >= gameHeight - foregroundHeight - 30 && (gameHeight - foregroundHeight > 500)) {
                 callback();
                 return;
             }
@@ -85,7 +77,6 @@ const useCollisionDetection = (birdPosition, pipes, gameWidth, gameHeight, foreg
         checkCollision();
     }, [birdPosition, pipes, gameWidth, gameHeight, foregroundHeight, callback]);
 };
-
 
 const birdImages = [BirdImage1, BirdImage2, BirdImage3, BirdImage4, BirdImage5, BirdImage6];
 
@@ -107,8 +98,7 @@ const Game = () => {
     const [score, setScore] = useState(0);
     const [isGameOver, setIsGameOver] = useState(false);
     const [passedPipes, setPassedPipes] = useState(new Set());
-    const [foregroundPosition, setForegroundPosition] = useState(0); // Add this state
-
+    const [foregroundPosition, setForegroundPosition] = useState(0);
 
     const playDieSound = () => {
         const sound = new Audio(DieSound);
@@ -116,7 +106,7 @@ const Game = () => {
     };
 
     const handleCollision = useCallback(() => {
-        playDieSound()
+        playDieSound();
         setIsGameOver(true);
     }, []);
 
@@ -133,7 +123,7 @@ const Game = () => {
                 if (birdPosition.top >= maxTop && v > 0) {
                     return 0;
                 }
-                return v + 0.5;
+                return v + gravity;
             });
 
             setBirdPosition(position => ({
@@ -141,34 +131,29 @@ const Game = () => {
                 top: Math.min(position.top + birdVelocity, maxTop)
             }));
 
-            setBirdRotation((prevRotation) => Math.min(prevRotation + 1, 90));
+            setBirdRotation((prevRotation) => birdVelocity < 0 ? -25 : Math.min(prevRotation + 6, 90));
 
             setPipes(prevPipes => {
                 return prevPipes.map(pipe => {
                     const newLeft = pipe.left - 0.5;
                     if (newLeft < -pipeWidth / gameWidth * 100) {
-                        return { top: Math.floor(Math.random() * 51) - 85, left: 100 };
+                        setPassedPipes(new Set());
+                        return { top: Math.floor(Math.random() * 51) - 130, left: 100 };
                     } else {
+                        if (!passedPipes.has(pipe) && birdPosition.left > (pipe.left * gameWidth / 100 + pipeWidth)) {
+                            setPassedPipes(prevPassedPipes => new Set(prevPassedPipes).add(pipe));
+                            setScore(prevScore => prevScore + 1/70);
+                        }
                         return { ...pipe, left: newLeft };
                     }
                 });
             });
 
-            setForegroundPosition(prevPosition => (prevPosition - 1) % (gameWidth * 2)); // Update foreground position
-
-            setPipes(prevPipes => {
-                return prevPipes.map(pipe => {
-                    const newLeft = pipe.left - 0.5;
-                    if (newLeft < -pipeWidth / gameWidth * 100) {
-                        return { top: Math.floor(Math.random() * 51) - 130, left: 100 };
-                    } else {
-                        if (!passedPipes.has(pipe) && birdPosition.left > (pipe.left * gameWidth / 100 + pipeWidth)) {
-                            setPassedPipes(prevPassedPipes => new Set(prevPassedPipes).add(pipe));
-                            setScore(prevScore => prevScore + 0.02);
-                        }
-                        return { ...pipe, left: newLeft };
-                    }
-                });
+            setForegroundPosition(prevPosition => {
+                if (prevPosition <= -gameWidth) {
+                    return 0;
+                }
+                return prevPosition - 2;
             });
 
             if (!isGameOver) {
@@ -183,16 +168,12 @@ const Game = () => {
         return () => cancelAnimationFrame(animationFrameRef.current);
     }, [gameWidth, gameHeight, birdVelocity, birdPosition.top, passedPipes, isGameOver]);
 
-    const playFlapSound = () => {
-        const sound = new Audio(FlapSound);
-        sound.play();
-    };
-
     const handleJump = () => {
         if (isGameOver) return;
-        playFlapSound();
+        const sound = new Audio(FlapSound);
+        sound.play();
         setBirdVelocity(jumpHeight);
-        setBirdRotation(-10);
+        setBirdRotation(-25);
         let frameCount = 0;
         const maxFrames = birdImages.length;
         const interval = setInterval(() => {
@@ -203,14 +184,13 @@ const Game = () => {
     };
 
     useCollisionDetection(birdPosition, pipes, gameWidth, gameHeight, foregroundRef.current ? foregroundRef.current.clientHeight : 0, handleCollision);
-
     return (
         <div className="gameWrapper relative max-w-[550px] w-[100vw] h-[100vh]" onClick={handleJump}>
             {isGameOver && <GameOver />}
             <div ref={gameRef} id='game'
                  className={`relative top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 max-w-[550px] max-h-full h-screen bg-[#00cbff] overflow-clip ${isGameOver ? "blur-sm" : ""}`}
                  style={{ backgroundColor: mapFolder[assetsIndex].colour }}>
-                <div className="gameFlex absolute flex flex-col justify-end max-h-full h-screen">
+                <div className="gameFlex flex flex-col justify-end h-screen max-h-[100dvh]">
                     <div
                         className="absolute z-30 left-0 top-0 drop-shadow-[4px_4px_0px_#000000] w-full text-center p-0 m-0 !text-[80px] text-white">{Math.round(score)}</div>
                     <img src={birdImages[currentBirdIndex]}
@@ -232,16 +212,15 @@ const Game = () => {
                         </div>
                     ))}
                     <img ref={foregroundRef} src={mapFolder[assetsIndex].fg}
-                         className="absolute z-20 bottom-0" alt=""
+                         className="absolute bottom-14 z-20 max-w-[550px]" alt=""
                          style={{left: `${foregroundPosition}px`}}/>
-                    <img src={mapFolder[assetsIndex].fg} className="absolute z-20 bottom-0" alt=""
+                    <img src={mapFolder[assetsIndex].fg} className="absolute z-20 bottom-14 max-w-[550px]" alt=""
                          style={{left: `${foregroundPosition + gameWidth}px`}}/>
-                    <img src={mapFolder[assetsIndex].bg} className="relative" alt=""/>
+                    <img src={mapFolder[assetsIndex].bg} className="absolute z-0 w-[550px] bottom-32 left-1/2 -translate-x-1/2" alt=""/>
                 </div>
             </div>
         </div>
     );
-
 };
 
 export default Game;

@@ -52,11 +52,17 @@ class BetaRepo(BaseRepo):
     async def update_record(self, user_id: int, record: int):
         beta_game = await self.select_user(user_id)
         if beta_game:
-            update_stmt = (update(BetaGame).where(BetaGame.user_id == user_id).values(record=record))
-            await self.session.execute(update_stmt)
-            await self.session.commit()
-            await self.session.close()
-            return record
+            if record > beta_game.record:
+                update_stmt = (
+                    update(BetaGame)
+                    .where(BetaGame.user_id == user_id)
+                    .values(record=record)
+                )
+                await self.session.execute(update_stmt)
+                await self.session.commit()
+                return record
+            else:
+                return beta_game.record
         else:
             raise ValueError("User not found")
 
