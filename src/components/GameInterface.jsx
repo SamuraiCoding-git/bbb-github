@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import BirdImage from "../assets/1.svg";
 import HeaderImage from "../assets/header.svg";
 import PlayImage from "../assets/play-button.svg";
@@ -6,34 +6,47 @@ import NoAchievementImage from "../assets/no-achievement-button.svg";
 import LeaderboardImage from "../assets/leaderboard-button.svg";
 import InviteImage from "../assets/invite-button.svg";
 import WalletImage from "../assets/wallet-button.svg";
+import SelectSound from "../assets/audio/select.wav";
 import { useNavigate } from "react-router-dom";
+import Durov from "./Durov";
 
 const GameInterface = () => {
     const navigate = useNavigate();
 
+    const playSelectSound = () => {
+        const sound = new Audio(SelectSound); // Создаем новый аудио-элемент при каждом нажатии
+        sound.play();
+    };
+
     const goToGame = () => {
+        playSelectSound();
         navigate('/game');
     };
 
     const goToLeaderboard = () => {
+        playSelectSound();
         navigate('/leaderboard');
     };
 
     const goToAchievement = () => {
+        playSelectSound();
         navigate('/achievements');
     };
 
     const goToInvite = () => {
+        playSelectSound();
         navigate('/invite');
     };
 
     const goToWallet = () => {
+        playSelectSound();
         navigate('/wallet');
     };
 
     return (
         <div className="ml-[70px]">
             <div className="game-interface">
+                <Durov />
                 <div className="header-container">
                     <img src={HeaderImage} id="header-image" alt="Header" />
                 </div>

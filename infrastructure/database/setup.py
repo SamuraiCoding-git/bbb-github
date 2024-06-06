@@ -1,7 +1,7 @@
 from asyncpg import create_pool
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 
-from tgbot.config import DbConfig
+from infrastructure.api.config.config import DbConfig
 
 
 def create_engine(db: DbConfig, echo=False):

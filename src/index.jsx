@@ -1,33 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import {BrowserRouter as Router, Route, Routes} from "react-router-dom";
-import {Toaster} from "react-hot-toast";
-import Main from "./pages/Main";
-import Leaderboard from "./pages/Leaderboard";
-import Achievements from "./pages/Achievements";
-import Wallet from "./pages/Wallet";
-import {THEME, TonConnectUIProvider} from "@tonconnect/ui-react";
-import Invite from "./pages/Invite";
-import Durov from "./pages/Durov";
-import Game from "./pages/Game";
-
-function App() {
-    return (
-        <Router>
-            <Toaster />
-            <Routes>
-                <Route path="/" element={<Main />} />
-                <Route path="/leaderboard" element={<Leaderboard />} />
-                <Route path="/achievements" element={<Achievements />} />
-                <Route path="/invite" element={<Invite />} />
-                <Route path="/wallet" element={<Wallet />} />
-                <Route path="/game" element={<Game />} />
-                <Route path="/durov" element={<Durov />}/>
-            </Routes>
-        </Router>
-    );
-}
+import App from './App';
+import { THEME, TonConnectUIProvider } from "@tonconnect/ui-react";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(

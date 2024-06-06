@@ -17,11 +17,18 @@ body {
   animation: scroll-right 60s linear infinite;
   overflow: hidden;
   position: fixed;
+  user-select: none;
 }
 
 button {
   background-color: transparent;
   border: none;
+  cursor: pointer;
+  transition: transform 0.1s;
+}
+
+button:active {
+  transform: scale(0.8);
 }
 
 @keyframes scroll-right {
@@ -35,17 +42,6 @@ button {
 
 img, video{
   max-width: none;
-}
-
-canvas {
-  left: 50%;
-  transform: translate(-50%, 0);
-  position: absolute;
-  bottom: 0;
-  /* max-height: 100dvh;
-  max-width: min(100%, 570px ); */
-  /* width: 100%; */
-  display: block;
 }
 
 .game-interface {
@@ -117,7 +113,7 @@ canvas {
 }
 
 
-.close-button#wallet, .close-button#invite {
+.close-button#wallet {
   position: absolute;
   margin-top: 20px;
   margin-left: 100px;
@@ -226,55 +222,17 @@ canvas {
   align-items: center;
 }
 
-.bird {
-  position: absolute;
-  width: 50px;
-  height: 50px;
-  background-color: yellow;
-  border-radius: 50%;
-  transition: top 0.1s ease-out;
-}
+/*.scroll-container {*/
+/*  display: flex;*/
+/*  width: 200%;*/
+/*  animation: scroll 2s linear infinite;*/
+/*}*/
 
-.pipe {
-  position: absolute;
-  width: 100px;
-  height: 600px;
-  background-color: green;
-}
-
-.score {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  font-size: 24px;
-  font-weight: bold;
-  color: white;
-}
-
-.game-over {
-  background-color: rgba(0, 0, 0, 0.5);
-}
-
-.game-over-message {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  color: white;
-  font-size: 36px;
-  font-weight: bold;
-  text-align: center;
-}
-
-@keyframes scroll-left {
+@keyframes scroll {
   0% {
-    transform: translateX(0%);
+    transform: translateX(0);
   }
   100% {
-    transform: translateX(-45%);
+    transform: translateX(-50%);
   }
-}
-
-.game-foreground img {
-  animation: scroll-left 4s linear infinite;
-  width: 800px;
 }

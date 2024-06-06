@@ -2,8 +2,8 @@ from dataclasses import dataclass
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from infrastructure.database.repo.admin import AdminRepo
-from infrastructure.database.repo.tasks import TasksRepo
+from infrastructure.database.repo.balls import BallsRepo
+from infrastructure.database.repo.beta import BetaRepo
 from infrastructure.database.repo.users import UserRepo
 
 
@@ -25,9 +25,9 @@ class RequestsRepo:
         return UserRepo(self.session)
 
     @property
-    def tasks(self) -> TasksRepo:
-        return TasksRepo(self.session)
+    def beta_game(self) -> BetaRepo:
+        return BetaRepo(self.session)
 
     @property
-    def admin(self) -> AdminRepo:
-        return AdminRepo(self.session)
+    async def balls(self) -> BallsRepo:
+        return BallsRepo(self.session)

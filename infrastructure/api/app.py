@@ -1,17 +1,20 @@
-import ast
 import logging
-from datetime import datetime
+import datetime
+from typing import Optional, List, Dict
 
 import betterlogging as bl
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from starlette.responses import JSONResponse
 
-from .config.config import load_config
-from ..database.models.leaderboard import Leaderboard
-from ..database.models.todos import ToDo
-from ..database.models.users import User
-from ..database.repo.requests import RequestsRepo
-from ..database.setup import create_engine, create_session_pool
+from config.config import load_config
+from infrastructure.database.models.users import User
+from infrastructure.database.models.beta import BetaGame
+from infrastructure.database.repo.requests import RequestsRepo
+from infrastructure.database.repo.users import UserRepo
+from infrastructure.database.repo.beta import BetaRepo
+from infrastructure.database.setup import create_engine, create_session_pool
+
+from pydantic import BaseModel
 
 app = FastAPI()
 config = load_config(".env")
@@ -22,228 +25,204 @@ bl.basic_colorized_config(level=log_level)
 log = logging.getLogger(__name__)
 
 
-@app.get("/api/get_user/{id}")
+class UserBase(BaseModel):
+    username: Optional[str]
+    full_name: str
+    language: Optional[str] = 'ru'
+    balance: Optional[float]
+    referred_by: Optional[int]
+    tasks_done: Optional[List[int]] = []
+    achievements_done: Optional[List[int]] = []
+    referrals: Optional[List[int]] = []
+    block_date: Optional[datetime.date]
+    referrals_percent: Optional[Dict[str, str]] = {}
+    wallet: Optional[str]
+
+
+class BetaGameBase(BaseModel):
+    user_id: int
+    durov_skin: Optional[bool] = False
+    transactions: Optional[int] = 0
+    games_count: Optional[int] = 0
+    pipes_count: Optional[int] = 0
+    record: Optional[int] = 0
+
+
+@app.get("/api/users/get_user/{id}")
 async def get_user(id: int):
-  async with engine.begin() as conn:
-    await conn.run_sync(User.metadata.create_all, checkfirst=True)
-  async with session_pool() as session:
-    try:
-      repo = RequestsRepo(session)
-    finally:
-      await session.close()
-    user = await repo.users.select_user(id)
-    content = {
-      "id": user.id,
-      "name": user.name,
-      "friends": user.friends,
-      "invitation": user.invitation,
-      "achievements": user.achievements,
-      "currentLeague": user.currentLeague,
-      "taskCompleted": user.taskCompleted,
-      "userImageProfile": user.userImageProfile,
-      "burningDays": user.burningDays,
-      "tokenBalance": user.tokenBalance
-    }
-    return JSONResponse(status_code=200, content=content)
+    async with engine.begin() as conn:
+        await conn.run_sync(User.metadata.create_all, checkfirst=True)
+    async with session_pool() as session:
+        try:
+            repo = RequestsRepo(session)
+        finally:
+            await session.close()
+        user = await repo.users.select_user(id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+
+        user_data = UserBase(
+            username=user.username,
+            full_name=user.full_name,
+            language=user.language,
+            balance=user.balance,
+            referred_by=user.referred_by,
+            tasks_done=user.tasks_done,
+            achievements_done=user.achievements_done,
+            referrals=user.referrals,
+            block_date=user.block_date,
+            referrals_percent=user.referrals_percent,
+            wallet=user.wallet
+        )
+        return JSONResponse(status_code=200, content=user_data.dict())
 
 
-@app.post(
-  "/api/add_user/{id}/{name}/{friends}/{invitation}/{achievements}/{currentLeague}/{taskCompleted}/{burningDays}/{tokenBalance}")
-async def add_user(id: int, name: str, friends: int, invitation: int, achievements: int, currentLeague: str,
-                   taskCompleted: int, burningDays: int, tokenBalance: int):
-  async with engine.begin() as conn:
-    await conn.run_sync(User.metadata.create_all, checkfirst=True)
-  async with session_pool() as session:
-    try:
-      repo = RequestsRepo(session)
-    finally:
-      await session.close()
-    await repo.users.get_or_create_user(id, name, friends, invitation, achievements, currentLeague, taskCompleted,
-                                        f"profile_photo_{id}", burningDays, tokenBalance)
-    await repo.leaderboard.get_or_create_leaderboard(id)
-    content = {
-      "id": id,
-      "name": name,
-      "friends": friends,
-      "invitation": invitation,
-      "achievements": achievements,
-      "currentLeague": currentLeague,
-      "taskCompleted": taskCompleted,
-      "userImageProfile": f"profile_photo_{id}",
-      "burningDays": burningDays,
-      "tokenBalance": tokenBalance
-    }
-    return JSONResponse(status_code=200, content=content)
+@app.post("/api/users/get_or_create_user")
+async def get_or_create_user(user_id: int, full_name: str, user_data: UserBase):
+    async with engine.begin() as conn:
+        await conn.run_sync(User.metadata.create_all, checkfirst=True)
+    async with session_pool() as session:
+        repo = UserRepo(session)
+        user = await repo.get_or_create_user(
+            user_id=user_id,
+            full_name=full_name,
+            language=user_data.language,
+            balance=user_data.balance,
+            referred_by=user_data.referred_by,
+            username=user_data.username,
+            tasks_done=user_data.tasks_done,
+            achievements_done=user_data.achievements_done,
+            referrals=user_data.referrals,
+            block_date=user_data.block_date,
+            referrals_percent=user_data.referrals_percent,
+            wallet=user_data.wallet
+        )
+        return JSONResponse(status_code=200, content={"user_id": user.user_id})
 
 
-@app.get("/api/get_todos/{user_id}")
-async def get_todos(user_id: int):
-  async with engine.begin() as conn:
-    await conn.run_sync(ToDo.metadata.create_all, checkfirst=True)
-  async with session_pool() as session:
-    try:
-      repo = RequestsRepo(session)
-    finally:
-      await session.close()
-    content = []
-    todos = await repo.todos.select_todos(user_id)
-    for todo in todos:
-      content.append({
-        "id": todo.id,
-        "time": todo.time,
-        "duration": todo.duration,
-        "status": todo.status,
-        "title": todo.title,
-        "description": todo.description,
-        "badges": todo.badges
-      })
-    return JSONResponse(status_code=200, content=content)
+@app.get("/api/users/count_users")
+async def count_users():
+    async with engine.begin() as conn:
+        await conn.run_sync(User.metadata.create_all, checkfirst=True)
+    async with session_pool() as session:
+        repo = UserRepo(session)
+        count = await repo.count_users()
+        return JSONResponse(status_code=200, content={"count": count})
 
 
-@app.get("/api/get_todos_calendar/{time}")
-async def get_todos_calendar(time):
-  async with engine.begin() as conn:
-    await conn.run_sync(ToDo.metadata.create_all, checkfirst=True)
-  async with session_pool() as session:
-    try:
-      repo = RequestsRepo(session)
-    finally:
-      await session.close()
-    content = []
-    todos = await repo.todos.select_todos_calendar(time)
-    for todo in todos:
-      content.append({
-        "id": todo.id,
-        "time": todo.time,
-        "duration": todo.duration,
-        "status": todo.status,
-        "title": todo.title,
-        "description": todo.description,
-        "badges": todo.badges
-      })
-    return JSONResponse(status_code=200, content=content)
+@app.patch("/api/users/update_balance/{user_id}")
+async def update_balance(user_id: int, amount: float):
+    async with engine.begin() as conn:
+        await conn.run_sync(User.metadata.create_all, checkfirst=True)
+    async with session_pool() as session:
+        repo = UserRepo(session)
+        new_balance = await repo.update_balance(user_id, amount)
+        return JSONResponse(status_code=200, content={"new_balance": new_balance})
 
 
-@app.post("/api/update_balance/{user_id}/{balance}")
-async def update_balance(user_id: int, balance: int):
-  async with engine.begin() as conn:
-    await conn.run_sync(User.metadata.create_all, checkfirst=True)
-    await conn.run_sync(Leaderboard.metadata.create_all, checkfirst=True)
-  async with session_pool() as session:
-    try:
-      repo = RequestsRepo(session)
-    finally:
-      await session.close()
-    user = await repo.users.update_balance(user_id, balance)
-    leaderboard = await repo.users.update_balance(user_id, balance)
-    content = {
-      "tokenBalance": user[0],
-      "weekly": leaderboard[0],
-      "monthly": leaderboard[1],
-      "all_time": leaderboard[2]
-    }
-    return JSONResponse(status_code=200, content=content)
+@app.patch("/api/users/update_referrals/{user_id}")
+async def update_referrals(user_id: int, referral: int):
+    async with engine.begin() as conn:
+        await conn.run_sync(User.metadata.create_all, checkfirst=True)
+    async with session_pool() as session:
+        repo = UserRepo(session)
+        try:
+            new_referrals = await repo.update_referrals(user_id, referral)
+            return JSONResponse(status_code=200, content={"referrals": new_referrals})
+        except ValueError as e:
+            raise HTTPException(status_code=404, detail=str(e))
 
 
-@app.post("/api/add_task/{user_id}/{time}/{duration}/{status}/{title}/{description}/{badges}")
-async def add_task(user_id: int, time: str, duration: str, status: bool, title: str, description: str, badges: str):
-  async with engine.begin() as conn:
-    await conn.run_sync(ToDo.metadata.create_all, checkfirst=True)
-  async with session_pool() as session:
-    try:
-      repo = RequestsRepo(session)
-    finally:
-      await session.close()
-    todo = await repo.todos.get_or_create_todo(user_id=user_id,
-                                               time=time,
-                                               duration=ast.literal_eval(duration),
-                                               status=status,
-                                               title=title,
-                                               description=description,
-                                               badges=ast.literal_eval(badges))
-    content = {
-      "id": todo.id,
-      "time": todo.time,
-      "duration": todo.duration,
-      "status": todo.status,
-      "title": todo.title,
-      "description": todo.description,
-      "badges": todo.badges
-    }
-  return JSONResponse(status_code=200, content=content)
+@app.patch("/api/users/update_achievements_done/{user_id}")
+async def update_achievements_done(user_id: int, achievement: int):
+    async with engine.begin() as conn:
+        await conn.run_sync(User.metadata.create_all, checkfirst=True)
+    async with session_pool() as session:
+        repo = UserRepo(session)
+        try:
+            new_achievements_done = await repo.update_achievements_done(user_id, achievement)
+            return JSONResponse(status_code=200, content={"achievements_done": new_achievements_done})
+        except ValueError as e:
+            raise HTTPException(status_code=404, detail=str(e))
 
 
-@app.get("/api/get_leaderboard/{period}/{number_of_users}")
-async def get_leaderboard(period: str, limit_of_users: int):
-  async with engine.begin() as conn:
-    await conn.run_sync(Leaderboard.metadata.create_all, checkfirst=True)
-  async with session_pool() as session:
-    try:
-      repo = RequestsRepo(session)
-    finally:
-      await session.close()
-  content = []
-  if period == "weekly":
-    leaderboard = await repo.leaderboard.select_users(period, limit_of_users)
-    print(leaderboard)
-    for leader in leaderboard:
-      content.append({
-        "id": leader.id,
-        "weekly": leader.weekly
-      })
-  elif period == "monthly":
-    leaderboard = await repo.leaderboard.select_users(period, limit_of_users)
-    for leader in leaderboard:
-      content.append({
-        "id": leader.id,
-        "monthly": leader.monthly
-      })
-  elif period == "all_time":
-    leaderboard = await repo.leaderboard.select_users(period, limit_of_users)
-    for leader in leaderboard:
-      content.append({
-        "id": leader.id,
-        "all_time": leader.all_time
-      })
-  return JSONResponse(status_code=200, content=content)
+@app.post("/api/betagame/get_or_create_user_beta")
+async def get_or_create_user_beta(beta_data: BetaGameBase):
+    async with engine.begin() as conn:
+        await conn.run_sync(BetaGame.metadata.create_all, checkfirst=True)
+    async with session_pool() as session:
+        repo = BetaRepo(session)
+        beta_game = await repo.get_or_create_user_beta(
+            user_id=beta_data.user_id,
+            durov_skin=beta_data.durov_skin,
+            transactions=beta_data.transactions,
+            games_count=beta_data.games_count,
+            pipes_count=beta_data.pipes_count,
+            record=beta_data.record
+        )
+        return JSONResponse(status_code=200, content={"user_id": beta_game.user_id})
 
 
-@app.post("/api/update_badges/{user_id}/{id}/{badges}")
-async def update_badges(user_id: int, id: int, badges: str):
-  badges = ast.literal_eval(badges)
-  async with engine.begin() as conn:
-    await conn.run_sync(Leaderboard.metadata.create_all, checkfirst=True)
-  async with session_pool() as session:
-    try:
-      repo = RequestsRepo(session)
-    finally:
-      await session.close()
-  badges = await repo.todos.update_badges(user_id, id, badges)
-  content = {
-    "badges": badges
-  }
-  return JSONResponse(status_code=200, content=content)
+@app.get("/api/betagame/select_user/{user_id}")
+async def select_user_beta(user_id: int):
+    async with engine.begin() as conn:
+        await conn.run_sync(BetaGame.metadata.create_all, checkfirst=True)
+    async with session_pool() as session:
+        repo = BetaRepo(session)
+        beta_game = await repo.select_user(user_id)
+        if not beta_game:
+            raise HTTPException(status_code=404, detail="BetaGame not found for user_id")
+        beta_data = BetaGameBase(
+            user_id=beta_game.user_id,
+            durov_skin=beta_game.durov_skin,
+            transactions=beta_game.transactions,
+            games_count=beta_game.games_count,
+            pipes_count=beta_game.pipes_count,
+            record=beta_game.record
+        )
+        return JSONResponse(status_code=200, content=beta_data.dict())
 
 
-@app.get("/api/get_ref_link/{id}")
-async def get_ref_link(id: int):
-  content = {
-    f"https://t.me/example_bot_name?start={id}"
-  }
-  return JSONResponse(status_code=200, content=content)
+@app.patch("/api/betagame/update_record/{user_id}")
+async def update_record(user_id: int, record: int):
+    async with engine.begin() as conn:
+        await conn.run_sync(BetaGame.metadata.create_all, checkfirst=True)
+    async with session_pool() as session:
+        repo = BetaRepo(session)
+        try:
+            new_record = await repo.update_record(user_id, record)
+            return JSONResponse(status_code=200, content={"record": new_record})
+        except ValueError as e:
+            raise HTTPException(status_code=404, detail=str(e))
 
 
-@app.post("/api/complete_todo/{user_id}/{id}")
-async def complete_task(user_id: int, id: int):
-  async with engine.begin() as conn:
-    await conn.run_sync(Leaderboard.metadata.create_all, checkfirst=True)
-  async with session_pool() as session:
-    try:
-      repo = RequestsRepo(session)
-    finally:
-      await session.close()
-  status = await repo.todos.update_status(user_id, id)
-  content = {
-    "status": status
-  }
-  return JSONResponse(status_code=200, content=content)
+@app.patch("/api/betagame/increment_games_count/{user_id}")
+async def increment_games_count(user_id: int):
+    async with engine.begin() as conn:
+        await conn.run_sync(BetaGame.metadata.create_all, checkfirst=True)
+    async with session_pool() as session:
+        repo = BetaRepo(session)
+        try:
+            new_games_count = await repo.increment_games_count(user_id)
+            return JSONResponse(status_code=200, content={"games_count": new_games_count})
+        except ValueError as e:
+            raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.patch("/api/betagame/increment_transactions/{user_id}")
+async def increment_transactions(user_id: int, amount: int):
+    async with engine.begin() as conn:
+        await conn.run_sync(BetaGame.metadata.create_all, checkfirst=True)
+    async with session_pool() as session:
+        repo = BetaRepo(session)
+        try:
+            new_transactions = await repo.increment_transactions(user_id, amount)
+            return JSONResponse(status_code=200, content={"transactions": new_transactions})
+        except ValueError as e:
+            raise HTTPException(status_code=404, detail=str(e))
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(app, host="127.0.0.1", port=8000)

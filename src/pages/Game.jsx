@@ -1,138 +1,247 @@
-import BirdImage from "../assets/1.svg";
-import React, {useState, useEffect, useRef} from "react";
-import ForegroundImage from "../assets/foreground.svg";
-import dayImage from "../assets/background.svg";
-import topPipeImage from "../assets/pipe-top.png";
-import bottomPipeImage from "../assets/pipe-bottom.svg";
+import BirdImage1 from "../assets/1.svg";
+import BirdImage2 from "../assets/2.svg";
+import BirdImage3 from "../assets/3.svg";
+import BirdImage4 from "../assets/4.svg";
+import BirdImage5 from "../assets/5.svg";
+import BirdImage6 from "../assets/6.svg";
+import ForegroundImageClassic from "../assets/img/Classic/road.svg";
+import BackgroundImageClassic from "../assets/img/Classic/background.svg";
+import PipeImageClassic from "../assets/img/Classic/pillar.svg";
+import ForegroundImageMexico from "../assets/img/Mexico/road.svg";
+import BackgroundImageMexico from "../assets/img/Mexico/background.svg";
+import PipeImageMexico from "../assets/img/Mexico/pillar.svg";
+import ForegroundImageWinter from "../assets/img/Winter/road.svg";
+import BackgroundImageWinter from "../assets/img/Winter/background.svg";
+import PipeImageWinter from "../assets/img/Winter/pillar.svg";
+import FlapSound from "../assets/audio/flap.wav";
+import DieSound from "../assets/audio/die.wav";
+import React, { useEffect, useRef, useState, useCallback } from "react";
+import GameOver from "../components/GameOver";
+
+const mapFolder = [
+    { fg: ForegroundImageClassic, bg: BackgroundImageClassic, pipe: PipeImageClassic, colour: "#00cbff" },
+    { fg: ForegroundImageMexico, bg: BackgroundImageMexico, pipe: PipeImageMexico, colour: "#E56C64" },
+    { fg: ForegroundImageWinter, bg: BackgroundImageWinter, pipe: PipeImageWinter, colour: "#22F7FF" }
+];
+
+const assetsIndex = Math.round(Math.random() * 2);
+
+const useCollisionDetection = (birdPosition, pipes, gameWidth, gameHeight, foregroundHeight, callback) => {
+    useEffect(() => {
+        const checkCollision = () => {
+            const birdRect = {
+                left: birdPosition.left - 25,
+                right: birdPosition.left + 25,
+                top: birdPosition.top - 25,
+                bottom: birdPosition.top + 25
+            };
+
+            const gap = gameHeight - 2 * 270;
+
+            // Check collision with pipes
+            for (let pipe of pipes) {
+                const upperPipeRect = {
+                    left: pipe.left * gameWidth / 100,
+                    right: pipe.left * gameWidth / 100 + 120,
+                    top: 0,
+                    bottom: pipe.top + 260
+                };
+
+                const lowerPipeRect = {
+                    left: pipe.left * gameWidth / 100,
+                    right: pipe.left * gameWidth / 100 + 120,
+                    top: pipe.top + 270 + gap,
+                    bottom: gameHeight - foregroundHeight
+                };
+
+                if (isOverlapping(birdRect, upperPipeRect) || isOverlapping(birdRect, lowerPipeRect)) {
+                    callback();
+                    return;
+                }
+            }
+
+            // Check collision with ceiling
+            if (birdRect.top === 0) {
+                callback();
+                return;
+            }
+
+            // Check collision with foreground
+            if (birdRect.bottom === gameHeight - foregroundHeight) {
+                callback();
+                return;
+            }
+        };
+
+        const isOverlapping = (rect1, rect2) => {
+            return (
+                rect1.left < rect2.right &&
+                rect1.right > rect2.left &&
+                rect1.top < rect2.bottom &&
+                rect1.bottom > rect2.top
+            );
+        };
+
+        checkCollision();
+    }, [birdPosition, pipes, gameWidth, gameHeight, foregroundHeight, callback]);
+};
+
+
+const birdImages = [BirdImage1, BirdImage2, BirdImage3, BirdImage4, BirdImage5, BirdImage6];
 
 const Game = () => {
-    const [isGame, setIsGame] = useState(false);
+    const pipeWidth = 120;
+    const birdHeight = 50;
+    const gravity = 0.4;
+    const jumpHeight = -8;
+    const gameRef = useRef(null);
+    const foregroundRef = useRef(null);
+    const animationFrameRef = useRef();
+    const [pipes, setPipes] = useState([{ top: Math.floor(Math.random() * 51) - 130, left: 100 }]);
+    const [gameWidth, setGameWidth] = useState(0);
+    const [gameHeight, setGameHeight] = useState(0);
+    const [birdPosition, setBirdPosition] = useState({ top: 450, left: 100 });
+    const [birdVelocity, setBirdVelocity] = useState(0);
+    const [birdRotation, setBirdRotation] = useState(0);
+    const [currentBirdIndex, setCurrentBirdIndex] = useState(0);
     const [score, setScore] = useState(0);
-    const [birdPosition, setBirdPosition] = useState(100);
-    const [birdRotation, setBirdRotation] = useState(0); // New state for bird rotation
-    const [pipePosition, setPipePosition] = useState(320);
-    const [pipeHeight, setPipeHeight] = useState({ top: -300, bottom: 300 });
-
-    const topBoundary = -300;
-    const bottomBoundary = 250;
-    const pipeWidth = 50;
-    const birdRef = useRef(null);
-    const upperDivRef = useRef(null);
-    const lowerDivRef = useRef(null);
-
-    useEffect(() => {
-        let gravityInterval;
-        let pipeInterval;
-        if (isGame) {
-            gravityInterval = setInterval(() => {
-                setBirdPosition((prevPosition) => {
-                    const newPosition = prevPosition + 5;
-                    if (newPosition >= bottomBoundary) {
-                        setIsGame(false);
-                        setScore(0);
-                        return bottomBoundary;
-                    }
-                    return newPosition;
-                });
-                setBirdRotation((prevRotation) => Math.min(prevRotation + 5, 90)); // Rotate the bird downwards
-            }, 30);
-
-            pipeInterval = setInterval(() => {
-                setPipePosition((prevPosition) => {
-                    const newPosition = prevPosition - 5;
-                    if (newPosition <= -pipeWidth) {
-                        setPipePosition(320);
-                        setPipeHeight({ top: Math.random() * 200 + 100, bottom: Math.random() * 200 + 200 });
-                        setScore((prevScore) => prevScore + 1); // Increase score when bird passes a pipe
-                    }
-                    return newPosition;
-                });
-            }, 30);
-
-            return () => {
-                clearInterval(gravityInterval);
-                clearInterval(pipeInterval);
-            };
-        }
-    }, [isGame, birdPosition, pipePosition]);
+    const [isGameOver, setIsGameOver] = useState(false);
+    const [passedPipes, setPassedPipes] = useState(new Set());
+    const [foregroundPosition, setForegroundPosition] = useState(0); // Add this state
 
 
-    const handleJump = () => {
-        if (!isGame) {
-            setIsGame(true);
-            setBirdPosition(100);
-        }
-        setBirdPosition((prevPosition) => {
-            const newPosition = prevPosition - 50;
-            if (newPosition <= topBoundary) {
-                setIsGame(false);
-                setScore(0);
-                return topBoundary;
-            }
-            return newPosition;
-        });
-        setBirdRotation(-20);
+    const playDieSound = () => {
+        const sound = new Audio(DieSound);
+        sound.play();
     };
 
+    const handleCollision = useCallback(() => {
+        playDieSound()
+        setIsGameOver(true);
+    }, []);
+
+    useEffect(() => {
+        if (gameRef.current) {
+            setGameWidth(gameRef.current.clientWidth);
+            setGameHeight(gameRef.current.clientHeight);
+        }
+
+        const updateGame = () => {
+            const maxTop = gameHeight - (foregroundRef.current ? foregroundRef.current.clientHeight : 0);
+
+            setBirdVelocity(v => {
+                if (birdPosition.top >= maxTop && v > 0) {
+                    return 0;
+                }
+                return v + 0.5;
+            });
+
+            setBirdPosition(position => ({
+                ...position,
+                top: Math.min(position.top + birdVelocity, maxTop)
+            }));
+
+            setBirdRotation((prevRotation) => Math.min(prevRotation + 1, 90));
+
+            setPipes(prevPipes => {
+                return prevPipes.map(pipe => {
+                    const newLeft = pipe.left - 0.5;
+                    if (newLeft < -pipeWidth / gameWidth * 100) {
+                        return { top: Math.floor(Math.random() * 51) - 85, left: 100 };
+                    } else {
+                        return { ...pipe, left: newLeft };
+                    }
+                });
+            });
+
+            setForegroundPosition(prevPosition => (prevPosition - 1) % (gameWidth * 2)); // Update foreground position
+
+            setPipes(prevPipes => {
+                return prevPipes.map(pipe => {
+                    const newLeft = pipe.left - 0.5;
+                    if (newLeft < -pipeWidth / gameWidth * 100) {
+                        return { top: Math.floor(Math.random() * 51) - 130, left: 100 };
+                    } else {
+                        if (!passedPipes.has(pipe) && birdPosition.left > (pipe.left * gameWidth / 100 + pipeWidth)) {
+                            setPassedPipes(prevPassedPipes => new Set(prevPassedPipes).add(pipe));
+                            setScore(prevScore => prevScore + 0.02);
+                        }
+                        return { ...pipe, left: newLeft };
+                    }
+                });
+            });
+
+            if (!isGameOver) {
+                animationFrameRef.current = requestAnimationFrame(updateGame);
+            }
+        };
+
+        if (!isGameOver) {
+            animationFrameRef.current = requestAnimationFrame(updateGame);
+        }
+
+        return () => cancelAnimationFrame(animationFrameRef.current);
+    }, [gameWidth, gameHeight, birdVelocity, birdPosition.top, passedPipes, isGameOver]);
+
+    const playFlapSound = () => {
+        const sound = new Audio(FlapSound);
+        sound.play();
+    };
+
+    const handleJump = () => {
+        if (isGameOver) return;
+        playFlapSound();
+        setBirdVelocity(jumpHeight);
+        setBirdRotation(-10);
+        let frameCount = 0;
+        const maxFrames = birdImages.length;
+        const interval = setInterval(() => {
+            setCurrentBirdIndex(frameCount % maxFrames);
+            frameCount++;
+            if (frameCount === maxFrames) clearInterval(interval);
+        }, 50);
+    };
+
+    useCollisionDetection(birdPosition, pipes, gameWidth, gameHeight, foregroundRef.current ? foregroundRef.current.clientHeight : 0, handleCollision);
+
     return (
-        <div className="relative max-w-[720px] ml-[150px]" onClick={handleJump}>
-            {isGame && (
-                <div className="game-score z-50 relative">
-                    <div className="absolute w-full mt-[130px] ml-[-175px]">
-                        <span className="absolute mt-[100px] left-1/2 transform -translate-x-1/2 text-white text-5xl font-bold relative">
-                            <span className="absolute inset-0 text-black transform translate-x-[2px] translate-y-[2px]">
-                                {score}
-                            </span>
-                            {score}
-                        </span>
-                    </div>
+        <div className="gameWrapper relative max-w-[550px] w-[100vw] h-[100vh]" onClick={handleJump}>
+            {isGameOver && <GameOver />}
+            <div ref={gameRef} id='game'
+                 className={`relative top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 max-w-[550px] max-h-full h-screen bg-[#00cbff] overflow-clip ${isGameOver ? "blur-sm" : ""}`}
+                 style={{ backgroundColor: mapFolder[assetsIndex].colour }}>
+                <div className="gameFlex absolute flex flex-col justify-end max-h-full h-screen">
+                    <div
+                        className="absolute z-30 left-0 top-0 drop-shadow-[4px_4px_0px_#000000] w-full text-center p-0 m-0 !text-[80px] text-white">{Math.round(score)}</div>
+                    <img src={birdImages[currentBirdIndex]}
+                         className="absolute z-50 w-[50px] h-[50px] left-1/2 -translate-x-1/2 -translate-y-1/2"
+                         style={{
+                             top: `${birdPosition.top}px`,
+                             left: `${birdPosition.left}px`,
+                             transform: `rotate(${birdRotation}deg)`
+                         }} alt=""/>
+                    {pipes.map((pipe, index) => (
+                        <div key={index} className="pipeWrapper absolute w-full h-full z-20 transform -translate-y-1/2"
+                             style={{top: `calc(55% + ${pipe.top}px)`, left: `${pipe.left}%`}}>
+                            <img src={mapFolder[assetsIndex].pipe} alt=""
+                                 className="!h-[300px] absolute transform rotate-180 -scale-x-100 z-20"
+                                 style={{width: `${pipeWidth}px`}}/>
+                            <img src={mapFolder[assetsIndex].pipe} alt=""
+                                 className="!h-[300px] absolute bottom-0 z-10"
+                                 style={{width: `${pipeWidth}px`}}/>
+                        </div>
+                    ))}
+                    <img ref={foregroundRef} src={mapFolder[assetsIndex].fg}
+                         className="absolute z-20 bottom-0" alt=""
+                         style={{left: `${foregroundPosition}px`}}/>
+                    <img src={mapFolder[assetsIndex].fg} className="absolute z-20 bottom-0" alt=""
+                         style={{left: `${foregroundPosition + gameWidth}px`}}/>
+                    <img src={mapFolder[assetsIndex].bg} className="relative" alt=""/>
                 </div>
-            )}
-            <div className="game-get-ready z-40 relative">
-                <div id="game-bird-animation">
-                    <img
-                        src={BirdImage}
-                        alt=""
-                        id="game-bird-image"
-                        className="z-40 absolute top-1/2 transform -translate-y-1/2 mt-[280px] ml-[20px] scale-50"
-                        style={{ top: birdPosition, transform: `rotate(${birdRotation}deg)` }} // Apply rotation
-                    ></img>
-                </div>
-            </div>
-            <div className="game-pipe z-20 relative">
-                <div
-                    style={{
-                        position: 'absolute',
-                        left: pipePosition,
-                        height: pipeHeight.top,
-                        top: `-35px`,
-                        width: '50px',
-                        backgroundColor: 'transparent',
-                        backgroundImage: `url(${topPipeImage})`,
-                        backgroundSize: 'cover'
-                    }}
-                />
-                <div
-                    style={{
-                        position: 'absolute',
-                        left: pipePosition,
-                        height: pipeHeight.bottom,
-                        top: `${700 - pipeHeight.bottom}px`,
-                        width: '50px',
-                        backgroundColor: 'transparent',
-                        backgroundImage: `url(${bottomPipeImage})`,
-                        backgroundSize: 'cover'
-                    }}
-                />
-            </div>
-            <div className="game-foreground z-30 relative">
-                <img src={ForegroundImage} alt="" className="mt-[595px] ml-[-170px] absolute z-20"></img>
-            </div>
-            <div className="game-background z-10 relative">
-                <img src={dayImage} alt="" className="ml-[-250px] mt-[-5px]"></img>
             </div>
         </div>
     );
+
 };
 
 export default Game;
