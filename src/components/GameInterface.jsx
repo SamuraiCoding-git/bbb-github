@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import BirdImage from "../assets/1.svg";
 import HeaderImage from "../assets/header.svg";
 import PlayImage from "../assets/play-button.svg";
@@ -10,11 +10,12 @@ import SelectSound from "../assets/audio/select.wav";
 import { useNavigate } from "react-router-dom";
 // import Durov from "./Durov";
 
+const sound = new Audio(SelectSound); // Создаем новый аудио-элемент при каждом нажатии
+
 const GameInterface = () => {
     const navigate = useNavigate();
 
     const playSelectSound = () => {
-        const sound = new Audio(SelectSound); // Создаем новый аудио-элемент при каждом нажатии
         sound.play();
     };
 
@@ -48,31 +49,31 @@ const GameInterface = () => {
             <div className="game-interface">
                 {/* <Durov /> */}
                 <div className="header-container">
-                    <img src={HeaderImage} id="header-image" alt="Header" />
+                    <img src={HeaderImage} />
                 </div>
                 <div className="bird-container pt-[30px]">
                     <div id="bird-animation">
-                        <img src={BirdImage} id="bird-image" alt="GetReady"/>
+                        <img src={BirdImage}/>
                     </div>
                 </div>
                 <div className="game-menu-container mt-[60px]">
                     <div className="first-layer">
                         <button className="menu-button" onClick={goToGame}>
-                            <img src={PlayImage} alt="Play" />
+                            <img src={PlayImage} />
                         </button>
                         <button className="menu-button" onClick={goToAchievement}>
-                            <img src={NoAchievementImage} alt="NoAchievement" />
+                            <img src={NoAchievementImage} />
                         </button>
                     </div>
                     <div className="second-layer">
-                        {/* <button className="menu-button" onClick={goToLeaderboard}>
-                            <img src={LeaderboardImage} alt="Leaderboard" />
-                        </button> */}
+                        <button className="menu-button" onClick={goToLeaderboard}>
+                            <img src={LeaderboardImage} />
+                        </button>
                         <button className="menu-button" onClick={goToInvite}>
-                            <img src={InviteImage} alt="Invite" />
+                            <img src={InviteImage} />
                         </button>
                         {/* <button className="menu-button" onClick={goToWallet}>
-                            <img src={WalletImage} alt="Wallet" />
+                            <img src={WalletImage} />
                         </button> */}
                     </div>
                 </div>
