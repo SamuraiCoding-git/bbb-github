@@ -1,4 +1,4 @@
-import LeaderboardBakingImage from "../assets/basking-L.svg";
+import LeaderboardBakingImage from "../assets/back-paper-L.svg";
 import LeaderboardEggsImage from "../assets/leaderboard-eggs.svg";
 import React, { useEffect, useState } from "react";
 import CloseButton from "../components/CloseButton";
