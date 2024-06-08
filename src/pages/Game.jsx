@@ -333,8 +333,6 @@ const Game = () => {
             context.drawImage(clouds, cloudsPosition.current, 40, canvasRef.current.width + 5, 200);
             context.drawImage(clouds, cloudsPosition.current + canvasRef.current.width, 40, canvasRef.current.width + 5, 200);
 
-            
-
             pipes.current.forEach((pipeData) => {
                 context.save();
                 context.translate(pipeData.x + pipeWidth / 2, pipeData.y - gapHeight - pipeHeight);
@@ -343,17 +341,9 @@ const Game = () => {
                 context.restore();
                 context.drawImage(pipe, pipeData.x, pipeData.y, pipeWidth, pipeHeight);
             });
-            
-            // Draw top clouds
-            context.drawImage(topClouds, groundPosition.current, -50, canvasRef.current.width + 5, 150);
-            context.drawImage(topClouds, groundPosition.current + canvasRef.current.width, -50, canvasRef.current.width + 5, 150);
 
             context.drawImage(foreground, groundPosition.current, canvasRef.current.height - 100, canvasRef.current.width + 5, 100);
             context.drawImage(foreground, groundPosition.current + canvasRef.current.width, canvasRef.current.height - 100, canvasRef.current.width, 100);
-
-            context.font = "60px MyFont";
-            context.fillStyle = "#FFF";
-            context.fillText(`Score: ${score.current}`, canvasRef.current.width / 2 - context.measureText(`Score: ${score.current}`).width / 2, 70);
 
             if (isAnimating) {
                 const animationYOffset = 15 * Math.sin((Date.now() / 200) % (2 * Math.PI));
@@ -362,11 +352,32 @@ const Game = () => {
                 if (showText) {
                     context.font = "80px MyFont";
                     context.fillStyle = "#FFF";
-                    context.fillText(hasDiedOnce ? "Try again!" : "TAP to start!", canvasRef.current.width / 2 - context.measureText(hasDiedOnce ? "Try again!" : "TAP to start!").width / 2, textRef.current + 400);
+                    context.strokeStyle = "#000";
+                    context.lineWidth = 6; 
+                    const startText = hasDiedOnce ? "Try again!" : "TAP to start!";
+                    const startTextWidth = context.measureText(startText).width;
+                    const startTextX = canvasRef.current.width / 2 - startTextWidth / 2;
+                    const startTextY = textRef.current + 400;
+                    context.strokeText(startText, startTextX, startTextY); 
+                    context.fillText(startText, startTextX, startTextY);
                 }
             } else {
                 context.drawImage(birdImgs[currentBirdIndex.current], birdPosition.current.x, birdPosition.current.y, birdSize, birdSize);
             }
+
+            // Draw top clouds
+            context.drawImage(topClouds, groundPosition.current, -50, canvasRef.current.width + 5, 150);
+            context.drawImage(topClouds, groundPosition.current + canvasRef.current.width, -50, canvasRef.current.width + 5, 150);
+
+            context.font = "60px MyFont";
+            context.fillStyle = "#FFF";
+            context.strokeStyle = "#000";
+            context.lineWidth = 6;
+            context.strokeText(`Score: ${score.current}`, canvasRef.current.width / 2 - context.measureText(`Score: ${score.current}`).width / 2, 60); 
+            context.fillText(`Score: ${score.current}`, canvasRef.current.width / 2 - context.measureText(`Score: ${score.current}`).width / 2, 60);
+
+            context.drawImage(foreground, groundPosition.current, canvasRef.current.height - 100, canvasRef.current.width + 5, 100);
+            context.drawImage(foreground, groundPosition.current + canvasRef.current.width, canvasRef.current.height - 100, canvasRef.current.width, 100);
         };
 
         const startGame = () => {
