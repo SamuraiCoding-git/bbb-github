@@ -17,11 +17,11 @@ const Leaderboard = () => {
             })
             .catch(() => {
                 setTopUsers([
-                    { name: "???", score: 50000 },
-                    { name: "???", score: 450000000000 },
-                    { name: "???", score: 4000},
-                    { name: "???", score: 35000 },
-                    { name: "???", score: 30000 },
+                    { username: "???", record: 50000 },
+                    { username: "???", record: 450000000000 },
+                    { username: "???", record: 4000},
+                    { username: "???", record: 35000 },
+                    { username: "???", record: 30000 },
                 ])
             })
 
@@ -30,7 +30,7 @@ const Leaderboard = () => {
                 setUser(user)
             })
             .catch(() => {
-                setUser({ name: "You", score: 0, position: 0})
+                setUser({ username: "You", record: 0, position: 0})
             })
     }, [])
 
@@ -54,10 +54,10 @@ const Leaderboard = () => {
                                 </div>
                                 <div className="flex flex-row justify-between w-full">
                                     <div className="pl-4 text-2xl border-black border-solid border-l-[3px]">
-                                        {formatName(member.name)}
+                                        {formatName(member.username)}
                                     </div>
                                     <div className="text-2xl">
-                                        {formatScore(member.score)}
+                                        {formatScore(member.record)}
                                     </div>
                                 </div>
                             </div>
@@ -76,10 +76,10 @@ const Leaderboard = () => {
                                 </div>
                                 <div className="flex flex-row justify-between w-full">
                                     <div className="pl-4 text-2xl border-black border-solid" style={{borderLeftWidth: '3px'}}>
-                                        {formatName(user.name)}
+                                        {formatName(user.username)}
                                     </div>
                                     <div className="text-2xl">
-                                        {formatScore(user.score)}
+                                        {formatScore(user.record)}
                                     </div>
                                 </div>
                             </div>
