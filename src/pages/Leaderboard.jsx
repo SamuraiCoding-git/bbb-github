@@ -1,14 +1,16 @@
 import LeaderboardBakingImage from "../assets/back-paper-L.svg";
 import LeaderboardEggsImage from "../assets/leaderboard-eggs.svg";
-import React, { useEffect, useState } from "react";
-import CloseButton from "../components/CloseButton";
+import React, { useEffect, useState, useContext } from "react";
 import { formatName, formatScore, formatPosition } from "../utils/Formaters"
 import { api } from "../api/interface"
 import { id as userId } from "../utils/TelegramUserData"
+import { HeaderContext } from "../components/Header";
 
 const Leaderboard = () => {
     const [topUsers, setTopUsers] = useState([]);
     const [user, setUser] = useState()
+
+    const { setIsShowCloseBtn } = useContext(HeaderContext)
 
     useEffect(() => {
         api.users.getTopFive()
@@ -32,15 +34,16 @@ const Leaderboard = () => {
             .catch(() => {
                 setUser({ username: "You", record: 0, position: 0})
             })
+
+        setIsShowCloseBtn(true)
+
+        return () => { setIsShowCloseBtn(false) }
     }, [])
 
     const topFivetopUsers = topUsers.sort((a, b) => b.score - a.score).slice(0, 5);
     // const topThreetopUsers = topUsers.sort((a, b) => b.score - a.score).slice(0, 3);
     return (
         <div className="relative h-screen w-screen">
-            <div className="absolute top-4 right-4 z-10">
-                <CloseButton/>
-            </div>
             <div className="absolute left-1/2 transform -translate-x-1/2">
                 <img src={LeaderboardEggsImage} className="relative mt-16 w-[310px]"/>
                 <img src={LeaderboardBakingImage} className="relative w-[310px]"/>

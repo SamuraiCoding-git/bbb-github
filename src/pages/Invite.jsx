@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
-import CloseButton from "../components/CloseButton";
+import { useContext, useEffect, useState } from "react";
 import InviteWindow from "../assets/back-paper-M.svg";
 import InviteFriendsButton from "../assets/img/Invite/invite_friends_button.svg";
 import { api } from "../api/interface"
 import { id as userId } from "../utils/TelegramUserData"
+import { HeaderContext } from "../components/Header";
 
 const Invite = () => {
+    const { setIsShowCloseBtn } = useContext(HeaderContext)
 
     const openExternalLink = (link) => {
         if (window.Telegram && window.Telegram.WebApp) {
@@ -20,16 +21,14 @@ const Invite = () => {
 
     useEffect(() => {
         // Получить количество приглашенных пользователей и поинты с них
+        setIsShowCloseBtn(true)
+
+        return () => { setIsShowCloseBtn(false) }
     }, [])
 
     return (
         <div className="relative flex flex-col items-center justify-start h-screen w-screen max-w-[574px]">
-            <header className="flex justify-end w-full p-4">
-                <div role="button">
-                    <CloseButton />
-                </div>
-            </header>
-            <div className="relative flex flex-col items-center justify-start flex-1 mt-16">
+            <div className="relative flex flex-col items-center justify-start flex-1 mt-32">
                 <div>
                     <img src={InviteWindow} alt="Invite window illustration" className="w-[310px]" />
                 </div>

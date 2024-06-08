@@ -10,9 +10,9 @@ import Durov from "./pages/Durov";
 import Game from "./pages/Game";
 import { MusicProvider } from "./components/MusicContext";
 import GameInterface from "./components/GameInterface";
-import BackgroundMusic from "./components/BackgroundMusic";
-import CloseButton from "./components/CloseButton";
+import { Header, HeaderProvider } from "./components/Header";
 import OnlyMobile from "./pages/OnlyMobile";
+
 
 function App() {
     const [isMobile, setIsMobile] = useState(false);
@@ -29,19 +29,21 @@ function App() {
 
     return (
         <MusicProvider>
-            <Router>
-                <BackgroundMusic />
-                <Toaster />
-                <Routes>
-                    <Route path="/durov" element={<Durov />} />
-                    <Route path="/" element={<GameInterface />} />
-                    <Route path="/game" element={<Game />} />
-                    <Route path="/leaderboard" element={<Leaderboard />} />
-                    <Route path="/achievements" element={<Achievements />} />
-                    <Route path="/invite" element={<Invite />} />
-                    <Route path="/wallet" element={<Wallet />} />
-                </Routes>
-            </Router>
+            <HeaderProvider>
+                <Router>
+                    <Header/>
+                    <Toaster />
+                    <Routes>
+                        <Route path="/durov" element={<Durov />} />
+                        <Route path="/" element={<GameInterface />} />
+                        <Route path="/game" element={<Game />} />
+                        <Route path="/leaderboard" element={<Leaderboard />} />
+                        <Route path="/achievements" element={<Achievements />} />
+                        <Route path="/invite" element={<Invite />} />
+                        <Route path="/wallet" element={<Wallet />} />
+                    </Routes>
+                </Router>
+            </HeaderProvider>
         </MusicProvider>
     );
 }
