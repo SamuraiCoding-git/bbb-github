@@ -46,6 +46,7 @@ class BallsRepo(BaseRepo):
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
 
+    # Обновление ежедневного входа
     async def update_daily_login(self, user_id: int, daily_login: bool):
         balls = await self.get_balls_by_user_id(user_id)
         if balls:
@@ -60,6 +61,7 @@ class BallsRepo(BaseRepo):
         else:
             raise ValueError("User not found")
 
+    # Обновление получения 100 очков в игре за сегодня
     async def update_daily_login_hundred(self, user_id: int, daily_login_hundred: bool):
         balls = await self.get_balls_by_user_id(user_id)
         if balls:
@@ -74,6 +76,7 @@ class BallsRepo(BaseRepo):
         else:
             raise ValueError("User not found")
 
+    # Обновление ежедневного лимита очков
     async def update_daily_limit(self, user_id: int, daily_limit: int):
         balls = await self.get_balls_by_user_id(user_id)
         if balls:
@@ -88,6 +91,7 @@ class BallsRepo(BaseRepo):
         else:
             raise ValueError("User not found")
 
+    # Удаляет запись по user_id
     async def delete_balls(self, user_id: int):
         delete_stmt = delete(Balls).where(Balls.user_id == user_id)
         await self.session.execute(delete_stmt)
