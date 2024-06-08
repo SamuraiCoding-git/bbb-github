@@ -5,6 +5,8 @@ from infrastructure.database.repo.base import BaseRepo
 
 
 class BallsRepo(BaseRepo):
+
+    # Получение или создание информации в таблицы balls
     async def get_or_create_balls(
             self,
             user_id: int,
@@ -37,6 +39,8 @@ class BallsRepo(BaseRepo):
 
         return result.scalar_one()
 
+
+    # Получение данных из таблицы balls
     async def get_balls_by_user_id(self, user_id: int):
         query = select(Balls).where(Balls.user_id == user_id)
         result = await self.session.execute(query)
