@@ -6,6 +6,9 @@ import betterlogging as bl
 from fastapi import FastAPI, HTTPException
 from starlette.responses import JSONResponse
 
+import aioredis
+
+
 from config.config import load_config
 from infrastructure.database.models.users import User
 from infrastructure.database.models.beta import BetaGame

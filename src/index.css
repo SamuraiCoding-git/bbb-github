@@ -107,18 +107,6 @@ img, video{
   margin: 5px; /* adjust spacing between buttons */
 }
 
-.close-button#achievements {
-  position: absolute;
-  margin-left: 100px;
-}
-
-
-.close-button#wallet {
-  position: absolute;
-  margin-top: 20px;
-  margin-left: 100px;
-}
-
 .leaderboard-list {
   position: absolute;
   margin-top: 10px;
@@ -166,8 +154,12 @@ img, video{
   margin-left: -40px;
 }
 
-.close-button img {
+.close-button {
   cursor: pointer;
+  position: absolute;
+  right: 20px;
+  top: 20px;
+  z-index: 20;
 }
 
 .background-music {

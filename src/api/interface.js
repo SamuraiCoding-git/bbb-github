@@ -60,6 +60,9 @@ function del(path) {
 }
 
 const api = {
+    users: {
+        getTopFive: () => get(`/users/get_top_five`),
+    },
     user: {
         getUser: (id) => get(`/users/get_user/${id}`),
         getOrCreateUser: (userId, fullName, userData) => post(`/users/get_or_create_user`, { user_id: userId, full_name: fullName, ...userData }),

@@ -5,6 +5,8 @@ from sqlalchemy import select, update
 
 
 class BetaRepo(BaseRepo):
+
+    # Получение или создание записи в таблице Beta
     async def get_or_create_user_beta(
             self,
             user_id: int,
@@ -45,10 +47,12 @@ class BetaRepo(BaseRepo):
 
         return result.scalar_one()
 
+    # Получение пользователя по user_id    
     async def select_user(self, user_id):
         query = select(BetaGame).where(BetaGame.user_id == user_id)
         return await self.session.scalar(query)
 
+    # Обновление рекорда
     async def update_record(self, user_id: int, record: int):
         beta_game = await self.select_user(user_id)
         if beta_game:
@@ -60,6 +64,7 @@ class BetaRepo(BaseRepo):
                 )
                 await self.session.execute(update_stmt)
                 await self.session.commit()
+                await self.session.close()
                 return record
             else:
                 return beta_game.record
@@ -71,6 +76,7 @@ class BetaRepo(BaseRepo):
         if betagame:
             betagame.games_count += 1
             await self.session.commit()
+            await self.session.close()
             return betagame.games_count
         else:
             raise ValueError("BetaGame not found for user_id")
@@ -80,6 +86,7 @@ class BetaRepo(BaseRepo):
         if betagame:
             betagame.transactions += amount
             await self.session.commit()
+            await self.session.close()
             return betagame.transactions
         else:
             raise ValueError("BetaGame not found for user_id")

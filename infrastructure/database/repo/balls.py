@@ -5,6 +5,8 @@ from infrastructure.database.repo.base import BaseRepo
 
 
 class BallsRepo(BaseRepo):
+
+    # Получение или создание информации в таблицы balls
     async def get_or_create_balls(
             self,
             user_id: int,
@@ -37,11 +39,14 @@ class BallsRepo(BaseRepo):
 
         return result.scalar_one()
 
+
+    # Получение данных из таблицы balls
     async def get_balls_by_user_id(self, user_id: int):
         query = select(Balls).where(Balls.user_id == user_id)
         result = await self.session.execute(query)
         return result.scalar_one_or_none()
 
+    # Обновление ежедневного входа
     async def update_daily_login(self, user_id: int, daily_login: bool):
         balls = await self.get_balls_by_user_id(user_id)
         if balls:
@@ -52,10 +57,12 @@ class BallsRepo(BaseRepo):
             )
             await self.session.execute(update_stmt)
             await self.session.commit()
+            await self.session.close()
             return daily_login
         else:
             raise ValueError("User not found")
 
+    # Обновление получения 100 очков в игре за сегодня
     async def update_daily_login_hundred(self, user_id: int, daily_login_hundred: bool):
         balls = await self.get_balls_by_user_id(user_id)
         if balls:
@@ -66,10 +73,12 @@ class BallsRepo(BaseRepo):
             )
             await self.session.execute(update_stmt)
             await self.session.commit()
+            await self.session.close()
             return daily_login_hundred
         else:
             raise ValueError("User not found")
 
+    # Обновление ежедневного лимита очков
     async def update_daily_limit(self, user_id: int, daily_limit: int):
         balls = await self.get_balls_by_user_id(user_id)
         if balls:
@@ -80,11 +89,14 @@ class BallsRepo(BaseRepo):
             )
             await self.session.execute(update_stmt)
             await self.session.commit()
+            await self.session.close()
             return daily_limit
         else:
             raise ValueError("User not found")
 
+    # Удаляет запись по user_id
     async def delete_balls(self, user_id: int):
         delete_stmt = delete(Balls).where(Balls.user_id == user_id)
         await self.session.execute(delete_stmt)
         await self.session.commit()
+        await self.session.close()
