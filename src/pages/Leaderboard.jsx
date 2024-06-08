@@ -1,4 +1,4 @@
-import LeaderboardBakingImage from "../assets/back-paper-L.svg";
+import BackPaperImage from "../assets/back-paper-L.svg";
 import LeaderboardEggsImage from "../assets/leaderboard-eggs.svg";
 import React, { useEffect, useState, useContext } from "react";
 import { formatName, formatScore, formatPosition } from "../utils/Formaters"
@@ -46,7 +46,7 @@ const Leaderboard = () => {
         <div className="relative h-screen w-screen">
             <div className="absolute left-1/2 transform -translate-x-1/2">
                 <img src={LeaderboardEggsImage} className="relative mt-16 w-[310px]"/>
-                <img src={LeaderboardBakingImage} className="relative w-[310px]"/>
+                <img src={BackPaperImage} className="relative w-[310px]"/>
 
                 <ul className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-[calc(50%-90px)] w-full max-w-[310px]">
                     {topFivetopUsers.map((member, index) => (

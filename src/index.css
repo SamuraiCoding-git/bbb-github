@@ -171,36 +171,11 @@ img, video{
   display: none;
 }
 
-.achievements-window {
-  position: absolute;
-  margin-left: -180px;
-  margin-top: 70px;
-}
-
-.concealed-image {
-  padding: 10px;
-}
-
 .ton-connect {
   position: absolute;
   margin-top: 300px;
   margin-left: -80px;
 
-}
-
-.achievements-header span{
-  position: absolute;
-  font-size: 5em;
-  margin-left: -45px;
-  margin-top: 70px;
-  z-index: 1;
-}
-
-.achievements-list {
-  position: absolute;
-  margin-left: -165px;
-  margin-top: 170px;
-  list-style: none;
 }
 
 .App {
