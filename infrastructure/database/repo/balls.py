@@ -57,6 +57,7 @@ class BallsRepo(BaseRepo):
             )
             await self.session.execute(update_stmt)
             await self.session.commit()
+            await self.session.close()
             return daily_login
         else:
             raise ValueError("User not found")
@@ -72,6 +73,7 @@ class BallsRepo(BaseRepo):
             )
             await self.session.execute(update_stmt)
             await self.session.commit()
+            await self.session.close()
             return daily_login_hundred
         else:
             raise ValueError("User not found")
@@ -87,6 +89,7 @@ class BallsRepo(BaseRepo):
             )
             await self.session.execute(update_stmt)
             await self.session.commit()
+            await self.session.close()
             return daily_limit
         else:
             raise ValueError("User not found")
@@ -96,3 +99,4 @@ class BallsRepo(BaseRepo):
         delete_stmt = delete(Balls).where(Balls.user_id == user_id)
         await self.session.execute(delete_stmt)
         await self.session.commit()
+        await self.session.close()

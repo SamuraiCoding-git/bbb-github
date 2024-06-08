@@ -64,6 +64,7 @@ class BetaRepo(BaseRepo):
                 )
                 await self.session.execute(update_stmt)
                 await self.session.commit()
+                await self.session.close()
                 return record
             else:
                 return beta_game.record
@@ -75,6 +76,7 @@ class BetaRepo(BaseRepo):
         if betagame:
             betagame.games_count += 1
             await self.session.commit()
+            await self.session.close()
             return betagame.games_count
         else:
             raise ValueError("BetaGame not found for user_id")
@@ -84,6 +86,7 @@ class BetaRepo(BaseRepo):
         if betagame:
             betagame.transactions += amount
             await self.session.commit()
+            await self.session.close()
             return betagame.transactions
         else:
             raise ValueError("BetaGame not found for user_id")
