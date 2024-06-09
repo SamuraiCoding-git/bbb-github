@@ -62,7 +62,7 @@ const GameInterface = () => {
                 </div>
                 <div className="bird-container pt-[30px]">
                     <div id="bird-animation">
-                        <img src={BirdImage}/>
+                        <img style={{opacity: '0'}} src={BirdImage}/>
                     </div>
                 </div>
                 <div className="game-menu-container mt-[60px]">

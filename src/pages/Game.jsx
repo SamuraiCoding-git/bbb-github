@@ -531,7 +531,7 @@ const Game = () => {
             <div ref={menuRef} className="gameOver duration-1000 absolute top-[150%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 max-w-[500px] w-[80dvw] h-auto p-[5vmin] pt-[10vmin] text-black flex flex-col items-center justify-center transition-all ease-in-out">
                 <img src={DeathImage} alt="Death Icon" className="absolute z-10 top-[-22%] left-1/2 transform -translate-x-1/2 h-[40%] w-auto" />
                 <img src={Paper} alt="Paper Background" className="absolute top-0 left-0 max-w-[500px] w-full max-h-full h-auto" />
-                <div className="relative z-10 text-[50px] mb-[30px]">{motivation}</div>
+                <div className="relative z-10 text-[50px] mb-[30px] text-center">{motivation}</div>
                 <div className="relative z-10 text-[30px] mb-[30px]">Score: {score.current}</div>
                 <div className="relative flex justify-between z-10">
                     <button onClick={restartGame} className="relative">
@@ -540,7 +540,7 @@ const Game = () => {
                                 alt="Invite Friends"
                                 className="w-full h-full"
                             />
-                        <div className="absolute w-full h-full text-black font-bold text-[40px] top-1/2 transform -translate-y-1/2 pt-1" style={{ fontSize: '24px' }}>
+                        <div className="absolute w-full h-full text-black font-bold text-[40px] top-1/2 transform -translate-y-1/2" style={{ fontSize: '24px' }}>
                             Restart
                         </div>
                     </button>
@@ -550,7 +550,7 @@ const Game = () => {
                                 alt="Invite Friends"
                                 className="w-full h-full"
                             />
-                        <div className="absolute w-full h-full text-black font-bold text-[40px] top-1/2 transform -translate-y-1/2 pt-1" style={{ fontSize: '24px' }}>
+                        <div className="absolute w-full h-full text-black font-bold text-[40px] top-1/2 transform -translate-y-1/2" style={{ fontSize: '24px' }}>
                         Back
                         </div>
                     </button>
