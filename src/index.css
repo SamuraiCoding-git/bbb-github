@@ -8,6 +8,12 @@
   font-style: normal;
 }
 
+@font-face {
+  font-family: 'Comic Sans MS';
+  src: url("./assets/Comic Sans MS.ttf") format("truetype");
+  font-style: normal;
+}
+
 body {
   font-family: 'MyCustomFont', 'Arial', sans-serif;
   display: flex;

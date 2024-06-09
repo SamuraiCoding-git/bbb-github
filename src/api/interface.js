@@ -60,12 +60,16 @@ function del(path) {
 }
 
 const api = {
+    achievements: {
+        getAll: () => get(`/achievements`)
+    },
     users: {
         getTopFive: () => get(`/users/get_top_five`),
     },
     user: {
         getUser: (id) => get(`/users/get_user/${id}`),
         getReferralsInfo: (userId) => get(`/users/my_referrals_info/${userId}`),
+        getAchievementsDone: (userId) => get(`/users/get_achievements_done/${userId}`),
         getOrCreateUser: (userId, fullName, userData) => post(`/users/get_or_create_user`, { user_id: userId, full_name: fullName, ...userData }),
         countUsers: () => get(`/users/count_users`),
         updateBalance: (userId, amount) => patch(`/users/update_balance/${userId}`, { amount }),
