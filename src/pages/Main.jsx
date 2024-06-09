@@ -5,7 +5,7 @@ import GameAudioComponent from "../components/Audio";
 
 const Main = () => {
     return (
-        <div className="h-screen">
+        <div className="h-screen w-screen relative">
             <GameAudioComponent />
             <GameInterface />
             <Durov />

@@ -29,6 +29,8 @@ const Invite = () => {
     }, [])
 
     return (
+        <div className="relative w-[100vw] h-[100vh]">
+            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[550px]">
         <div className="relative flex flex-col items-center justify-start h-screen w-screen max-w-[574px]">
             <div className="relative flex flex-col items-center justify-start flex-1 mt-32">
                 <div>
@@ -70,6 +72,8 @@ const Invite = () => {
                         </div>
                     </button>
             </div>
+        </div>
+        </div>
         </div>
     );
 }
