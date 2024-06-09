@@ -7,7 +7,7 @@ import BirdImage5 from "../assets/5.svg";
 import BirdImage6 from "../assets/6.svg";
 import ForegroundImageClassic from "../assets/img/Classic/road.svg";
 import BackgroundImageClassic from "../assets/img/Classic/background.png";
-import PipeImageClassic from "../assets/img/Classic/pillar.svg";
+import PipeImageClassic from "../assets/img/Classic/pillar.png";
 import Clouds from "../assets/img/Classic/clouds.png";
 import TopClouds from "../assets/img/Classic/topClouds.png";
 import FlapSound1 from "../assets/flap1.wav";
@@ -15,7 +15,12 @@ import FlapSound2 from "../assets/flap2.wav";
 import FlapSound3 from "../assets/flap3.wav";
 import DieSound from "../assets/audio/die.wav";
 import MyFont from "../assets/17634.ttf";
+import Paper from "../assets/back-paper-S.png";
+import DeathImage from "../assets/death.png";
 import { HeaderContext } from "../components/Header";
+import InviteFriendsButtonImg from "../assets/img/Invite/invite_friends_button.svg";
+import BackSound from "../assets/audio/back.wav";
+import SelectSound from "../assets/audio/select.wav";
 
 const mapFolder = [
     { fg: ForegroundImageClassic, bg: BackgroundImageClassic, pipe: PipeImageClassic, clouds: Clouds, topClouds: TopClouds, colour: "#00cbff" }
@@ -30,39 +35,41 @@ const motivationalPhrases = [
     "You can do it!",
     "Don't give up!",
     "Try again!",
-    "Stay focused!"
+    "Stay focused!",
+    "Nice $Balls"
 ];
 
-const sounds = [FlapSound1, FlapSound2, FlapSound3, DieSound];
+const soundSources = [FlapSound1, FlapSound2, FlapSound3, DieSound, BackSound, SelectSound];
 
-const loadSound = (src) => {
+const loadImage = (src, alt) => {
     return new Promise((resolve, reject) => {
-        const sound = new Audio(src);
-        sound.oncanplaythrough = () => {
-            console.log(`Sound loaded: ${src}`);
-            resolve(sound);
+        const img = new Image();
+        img.src = src;
+        img.alt = alt;
+        img.onload = () => {
+            resolve(img);
         };
-        sound.onerror = (e) => {
-            console.error(`Failed to load sound: ${src}`, e);
+        img.onerror = (e) => {
             reject(e);
         };
-        sound.load();
     });
 };
 
 const Game = () => {
     const { setIsShowCloseBtn } = useContext(HeaderContext);
     const pipeWidth = 100;
-    const pipeHeight = 300;
+    const pipeHeight = 300 * 1.8;
     const birdSize = 100;
     const initialBirdSize = birdSize * 2;
     const gravity = 0.4;
     const jumpHeight = -8;
-    const gapHeight = 220;
-    const pipeSpeed = 4;
-    const groundSpeed = 2;
-    const cloudsSpeed = groundSpeed / 2;
+    const gapHeight = 200;
+    const initialPipeSpeed = 4;
+    const initialGroundSpeed = 2;
+    const initialCloudsSpeed = initialGroundSpeed / 2;
     const parallaxMax = 30;
+    const maxScoreForMaxSpeed = 1000;
+    const maxSpeedMultiplier = 1.4;
 
     const canvasRef = useRef(null);
     const birdPosition = useRef({ x: 275, y: 400 });
@@ -77,6 +84,8 @@ const Game = () => {
     const textRef = useRef(200);
     const animationFrameRef = useRef(null);
     const lastTimeRef = useRef(Date.now());
+    const isInitialMount = useRef(true);
+    const menuRef = useRef(null);
 
     const [gameState, setGameState] = useState("start");
     const [isAnimating, setIsAnimating] = useState(true);
@@ -86,9 +95,17 @@ const Game = () => {
     const [motivation, setMotivation] = useState("");
     const [hasDiedOnce, setHasDiedOnce] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
+    const [paperImage, setPaperImage] = useState(null);
+    const [inviteFriendsButton, setInviteFriendsButton] = useState(null);
     const birdAnimationRef = useRef(null);
+    const deathIconRef = useRef(null);
+    const deathIconOpacityRef = useRef(1);
+    const scoreOpacityRef = useRef(0);
 
     const dieSound = useRef(null);
+    const flapSounds = useRef([]);
+    const backSound = useRef(null);
+    const selectSound = useRef(null);
 
     const assetsRef = useRef({
         birdImgs: [],
@@ -97,24 +114,8 @@ const Game = () => {
         clouds: null,
         topClouds: null,
         pipe: null,
-        flapSounds: [],
+        deathIcon: null
     });
-
-    const loadImage = (src, alt) => {
-        return new Promise((resolve, reject) => {
-            const img = new Image();
-            img.src = src;
-            img.alt = alt;
-            img.onload = () => {
-                console.log(`Image loaded: ${src}`);
-                resolve(img);
-            };
-            img.onerror = (e) => {
-                console.error(`Failed to load image: ${src}`, e);
-                reject(e);
-            };
-        });
-    };
 
     const loadAssets = async () => {
         try {
@@ -124,22 +125,64 @@ const Game = () => {
             const clouds = await loadImage(mapFolder[assetsIndex].clouds, "Clouds Image");
             const topClouds = await loadImage(mapFolder[assetsIndex].topClouds, "Top Clouds Image");
             const pipe = await loadImage(mapFolder[assetsIndex].pipe, "Pipe Image");
+            const paper = await loadImage(Paper, "Paper Background");
+            const deathIcon = await loadImage(DeathImage, "Death Icon");
+            const inviteButton = await loadImage(InviteFriendsButtonImg, "Invite Friends Button");
 
-            console.log('Starting to load sounds...');
-            const flapSounds = await Promise.all(sounds.slice(0, 3).map((src) => loadSound(src)));
-            console.log('Flap sounds loaded:', flapSounds);
-            dieSound.current = await loadSound(sounds[3]);
-            console.log('Die sound loaded:', dieSound.current);
+            flapSounds.current = soundSources.slice(0, 3).map(src => {
+                const sound = new Audio(src);
+                sound.preload = 'auto';
+                return sound;
+            });
+            dieSound.current = new Audio(soundSources[3]);
+            dieSound.current.preload = 'auto';
 
-            assetsRef.current = { birdImgs, foreground, background, clouds, topClouds, pipe, flapSounds };
-            console.log('All assets loaded');
+            backSound.current = new Audio(soundSources[4]);
+            backSound.current.preload = 'auto';
+
+            selectSound.current = new Audio(soundSources[5]);
+            selectSound.current.preload = 'auto';
+
+            assetsRef.current = { birdImgs, foreground, background, clouds, topClouds, pipe, deathIcon };
+            setPaperImage(paper);
+            setInviteFriendsButton(inviteButton);
             setIsLoading(false);
         } catch (error) {
             console.error('Error loading assets:', error);
         }
     };
 
+    useEffect(() => {
+        if (isInitialMount.current) {
+            loadAssets();
+            isInitialMount.current = false;
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!isLoading) {
+            initializeGame();
+            if (animationFrameRef.current) {
+                cancelAnimationFrame(animationFrameRef.current);
+            }
+            lastTimeRef.current = Date.now();
+        }
+    }, [isLoading]);
+
+    useEffect(() => {
+        if (!isLoading && (gameState === "start" || gameState === "playing")) {
+            birdAnimationRef.current = setInterval(() => {
+                currentBirdIndex.current = (currentBirdIndex.current + 1) % birdImages.length;
+            }, gameState === "start" ? 100 : 50);
+        } else {
+            clearInterval(birdAnimationRef.current);
+        }
+
+        return () => clearInterval(birdAnimationRef.current);
+    }, [gameState, isLoading]);
+
     const initializeGame = () => {
+        scoreOpacityRef.current = 0;
         pipes.current = [];
         birdPosition.current = { x: 275, y: 400 };
         birdVelocity.current = 0;
@@ -150,9 +193,12 @@ const Game = () => {
         birdSizeRef.current = initialBirdSize;
         initialBirdPosition.current = { x: 275, y: 400 };
         lastTimeRef.current = Date.now();
+        deathIconRef.current = null;
+        deathIconOpacityRef.current = 1;
     };
 
     const restartGame = () => {
+        selectSound.current.play();
         setHasDiedOnce(true);
         initializeGame();
         setGameState("start");
@@ -183,13 +229,13 @@ const Game = () => {
             const adjustedPipeHeight = pipeHeight * 0.90;
 
             if (birdX + birdRadius > pipeCenterX - adjustedPipeWidth / 2 && birdX - birdRadius < pipeCenterX + adjustedPipeWidth / 2) {
-                if (birdY + birdRadius > pipeY + adjustedPipeHeight * 0.10) {
+                if (birdY + birdRadius > pipeY + adjustedPipeHeight * 0.07) {
                     return true;
                 }
             }
 
             if (birdX + birdRadius > pipeCenterX - adjustedPipeWidth / 2 && birdX - birdRadius < pipeCenterX + adjustedPipeWidth / 2) {
-                if (birdY - birdRadius < pipeY - gapHeight - adjustedPipeHeight * 0.10) {
+                if (birdY - birdRadius < pipeY - gapHeight - adjustedPipeHeight * 0.07) {
                     return true;
                 }
             }
@@ -203,6 +249,7 @@ const Game = () => {
             restartGame();
         } else {
             dieSound.current.play();
+            deathIconRef.current = { x: birdPosition.current.x, y: birdPosition.current.y };
             setTimeout(() => {
                 setMotivation(motivationalPhrases[Math.floor(Math.random() * motivationalPhrases.length)]);
                 setShowMenu(true);
@@ -211,36 +258,12 @@ const Game = () => {
     };
 
     useEffect(() => {
-        loadAssets();
-    }, []);
-
-    useEffect(() => {
-        if (!isLoading) {
-            initializeGame();
-            if (animationFrameRef.current) {
-                cancelAnimationFrame(animationFrameRef.current);
+        setTimeout(() => {
+            if (showMenu && menuRef.current) {
+                menuRef.current.style.top = '50%';
             }
-            lastTimeRef.current = Date.now();
-        }
-    }, [isLoading]);
-
-    useEffect(() => {
-        if (gameState === "start") {
-            birdAnimationRef.current = setInterval(() => {
-                currentBirdIndex.current = (currentBirdIndex.current + 1) % birdImages.length;
-            }, 100);
-        } else if (gameState === "playing") {
-            birdAnimationRef.current = setInterval(() => {
-                currentBirdIndex.current = (currentBirdIndex.current + 1) % birdImages.length;
-            }, 50);
-        } else if (gameState === "gameOver") {
-            handleGameOver();
-        } else {
-            clearInterval(birdAnimationRef.current);
-        }
-
-        return () => clearInterval(birdAnimationRef.current);
-    }, [gameState]);
+        }, 10);
+    }, [showMenu]);
 
     useEffect(() => {
         const loadFont = async () => {
@@ -257,20 +280,26 @@ const Game = () => {
 
             const context = canvas.getContext('2d');
 
-            const { birdImgs, foreground, background, clouds, topClouds, pipe } = assetsRef.current;
+            const { birdImgs, foreground, background, clouds, topClouds, pipe, deathIcon } = assetsRef.current;
 
             const now = Date.now();
             const deltaTime = (now - lastTimeRef.current) / 1000;
             lastTimeRef.current = now;
 
             updateGameLogic(deltaTime);
-            drawGame(context, birdImgs, foreground, background, clouds, topClouds, pipe);
+            drawGame(context, birdImgs, foreground, background, clouds, topClouds, pipe, deathIcon);
             if (gameState !== "gameOver" || birdPosition.current.y < canvas.height) {
                 animationFrameRef.current = requestAnimationFrame(gameLoop);
             }
         };
 
         const updateGameLogic = (deltaTime) => {
+            const speedMultiplier = 1 + (maxSpeedMultiplier - 1) * Math.min(score.current / maxScoreForMaxSpeed, 1);
+
+            const pipeSpeed = initialPipeSpeed * speedMultiplier;
+            const groundSpeed = initialGroundSpeed * speedMultiplier;
+            const cloudsSpeed = initialCloudsSpeed * speedMultiplier;
+
             if (gameState === "start" || gameState === "gameOver") {
                 groundPosition.current = (groundPosition.current - groundSpeed * deltaTime * 60) % canvasRef.current.width;
                 cloudsPosition.current = (cloudsPosition.current - cloudsSpeed * deltaTime * 60) % canvasRef.current.width;
@@ -279,8 +308,13 @@ const Game = () => {
             if (gameState === "gameOver") {
                 birdVelocity.current += gravity * deltaTime * 60;
                 birdPosition.current.y += birdVelocity.current * deltaTime * 60;
+                birdPosition.current.x -= 2 * deltaTime * 60;
                 if (birdPosition.current.y >= canvasRef.current.height - birdSize / 2) {
                     cancelAnimationFrame(animationFrameRef.current);
+                }
+                if (deathIconRef.current) {
+                    deathIconRef.current.y -= 2 * deltaTime * 60;
+                    deathIconOpacityRef.current -= deltaTime * 2;
                 }
                 return;
             }
@@ -300,7 +334,7 @@ const Game = () => {
             }
 
             if (pipes.current.length === 0 || pipes.current[pipes.current.length - 1].x < canvasRef.current.width - 400) {
-                const newPipeY = canvasRef.current.height - pipeHeight - Math.floor(Math.random() * 101);
+                const newPipeY = canvasRef.current.height - pipeHeight + -100 + Math.floor(Math.random() * 401);
                 pipes.current.push({ x: canvasRef.current.width, y: newPipeY });
             }
 
@@ -319,9 +353,13 @@ const Game = () => {
 
             groundPosition.current = (groundPosition.current - groundSpeed * deltaTime * 60) % canvasRef.current.width;
             cloudsPosition.current = (cloudsPosition.current - cloudsSpeed * deltaTime * 60) % canvasRef.current.width;
+
+            if (gameState === "playing" && scoreOpacityRef.current < 1) {
+                scoreOpacityRef.current = Math.min(scoreOpacityRef.current + deltaTime, 1);
+            }
         };
 
-        const drawGame = (context, birdImgs, foreground, background, clouds, topClouds, pipe) => {
+        const drawGame = (context, birdImgs, foreground, background, clouds, topClouds, pipe, deathIcon) => {
             context.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
 
             const parallaxOffset = parallaxMax * (birdPosition.current.y / canvasRef.current.height - 0.5);
@@ -329,7 +367,6 @@ const Game = () => {
             const backgroundHeight = (canvasRef.current.height - 100) * 1.05;
             context.drawImage(background, 0, parallaxOffset, backgroundWidth, backgroundHeight);
 
-            // Draw clouds
             context.drawImage(clouds, cloudsPosition.current, 40, canvasRef.current.width + 5, 200);
             context.drawImage(clouds, cloudsPosition.current + canvasRef.current.width, 40, canvasRef.current.width + 5, 200);
 
@@ -347,33 +384,47 @@ const Game = () => {
 
             if (isAnimating) {
                 const animationYOffset = 15 * Math.sin((Date.now() / 200) % (2 * Math.PI));
-                context.drawImage(birdImgs[currentBirdIndex.current], initialBirdPosition.current.x - birdSizeRef.current / 2, initialBirdPosition.current.y + animationYOffset - birdSizeRef.current / 2, birdSizeRef.current, birdSizeRef.current);
+                context.save();
+                context.translate(initialBirdPosition.current.x, initialBirdPosition.current.y + animationYOffset);
+                context.rotate(0);
+                context.drawImage(birdImgs[currentBirdIndex.current], -birdSizeRef.current / 2, -birdSizeRef.current / 2, birdSizeRef.current, birdSizeRef.current);
+                context.restore();
 
                 if (showText) {
                     context.font = "80px MyFont";
                     context.fillStyle = "#FFF";
                     context.strokeStyle = "#000";
-                    context.lineWidth = 6; 
+                    context.lineWidth = 6;
                     const startText = hasDiedOnce ? "Try again!" : "TAP to start!";
                     const startTextWidth = context.measureText(startText).width;
                     const startTextX = canvasRef.current.width / 2 - startTextWidth / 2;
-                    const startTextY = textRef.current + 400;
-                    context.strokeText(startText, startTextX, startTextY); 
+                    const startTextY = textRef.current + 450;
+                    context.strokeText(startText, startTextX, startTextY);
                     context.fillText(startText, startTextX, startTextY);
                 }
             } else {
-                context.drawImage(birdImgs[currentBirdIndex.current], birdPosition.current.x, birdPosition.current.y, birdSize, birdSize);
+                context.save();
+                context.translate(birdPosition.current.x + birdSize / 2, birdPosition.current.y + birdSize / 2);
+                context.rotate((Math.PI / 180) * birdRotation.current);
+                context.drawImage(birdImgs[currentBirdIndex.current], -birdSize / 2, -birdSize / 2, birdSize, birdSize);
+                context.restore();
             }
 
-            // Draw top clouds
+            if (deathIconRef.current && deathIconOpacityRef.current > 0) {
+                context.save();
+                context.globalAlpha = deathIconOpacityRef.current;
+                context.drawImage(deathIcon, deathIconRef.current.x, deathIconRef.current.y, 50, 50);
+                context.restore();
+            }
+
             context.drawImage(topClouds, groundPosition.current, -50, canvasRef.current.width + 5, 150);
             context.drawImage(topClouds, groundPosition.current + canvasRef.current.width, -50, canvasRef.current.width + 5, 150);
 
             context.font = "60px MyFont";
-            context.fillStyle = "#FFF";
-            context.strokeStyle = "#000";
+            context.fillStyle = `rgba(255, 255, 255, ${scoreOpacityRef.current})`;
+            context.strokeStyle = `rgba(0, 0, 0, ${scoreOpacityRef.current})`;
             context.lineWidth = 6;
-            context.strokeText(`Score: ${score.current}`, canvasRef.current.width / 2 - context.measureText(`Score: ${score.current}`).width / 2, 60); 
+            context.strokeText(`Score: ${score.current}`, canvasRef.current.width / 2 - context.measureText(`Score: ${score.current}`).width / 2, 60);
             context.fillText(`Score: ${score.current}`, canvasRef.current.width / 2 - context.measureText(`Score: ${score.current}`).width / 2, 60);
 
             context.drawImage(foreground, groundPosition.current, canvasRef.current.height - 100, canvasRef.current.width + 5, 100);
@@ -395,6 +446,8 @@ const Game = () => {
             clearInterval(birdAnimationRef.current);
         };
     }, [gameState, isAnimating, showText, hasDiedOnce, isLoading]);
+
+    const birdRotation = useRef(0);
 
     const handleJump = () => {
         if (gameState === "gameOver") return;
@@ -434,35 +487,75 @@ const Game = () => {
                     clearInterval(birdAnimationRef.current);
                 }
             }, 50);
-            const randomFlapSound = assetsRef.current.flapSounds[Math.floor(Math.random() * assetsRef.current.flapSounds.length)];
+            const randomFlapSound = flapSounds.current[Math.floor(Math.random() * flapSounds.current.length)];
             randomFlapSound.play();
             birdVelocity.current = jumpHeight;
+            birdRotation.current = -15;
         }
     };
+
+    useEffect(() => {
+        const rotationInterval = setInterval(() => {
+            if (gameState === "playing" && birdRotation.current < 45) {
+                birdRotation.current += 1;
+            }
+        }, 20);
+
+        return () => clearInterval(rotationInterval);
+    }, [gameState]);
 
     useEffect(() => {
         setIsShowCloseBtn(true);
         return () => { setIsShowCloseBtn(false); };
     }, [setIsShowCloseBtn]);
 
+    useEffect(() => {
+        if (gameState === "gameOver") {
+            handleGameOver();
+        }
+    }, [gameState]);
+
     if (isLoading) {
-        return <div className="loadingScreen" style={{ display: 'flex', width: '100dvw', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#00cbff' }}>Loading...</div>;
+        return <div className="loadingScreen" style={{ color: "#fff", fontSize: '40px', display: 'flex', width: '100dvw', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#00cbff' }}>Loading...</div>;
     }
 
     return (
-        <div className="gameWrapper w-[100dvw] h-[100dvh] max-h-screen flex justify-center items-end" style={{background: '#00cbff'}} onClick={handleJump}>
-            {showMenu && (
-                <div className="gameOver" style={{position: 'absolute', top: 0, left: 0, right: 0, height: '100dvh', background: 'rgba(0, 0, 0, 0.7)', color: '#FFF', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center'}}>
-                    <div style={{fontSize: '40px', marginBottom: '20px'}}>{motivation}</div>
-                    <div style={{fontSize: '30px', marginBottom: '20px'}}>Score: {score.current}</div>
-                    <div>
-                        <button onClick={restartGame} style={{fontSize: '20px', marginRight: '10px'}}>Restart</button>
-                        <button onClick={() => window.history.back()} style={{fontSize: '20px'}}>Back</button>
-                    </div>
+        <div className="gameWrapper w-[100dvw] h-[100dvh] max-h-screen flex justify-center items-end bg-[#00cbff]" onClick={handleJump}>
+    {showMenu && (
+        <div className="backgroundgBlur w-[100dvw] h-[100dvh] backdrop-blur-sm absolute">
+            <div ref={menuRef} className="gameOver duration-1000 absolute top-[150%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 max-w-[500px] w-[80dvw] h-auto p-[5vmin] pt-[10vmin] text-black flex flex-col items-center justify-center transition-all ease-in-out">
+                <img src={DeathImage} alt="Death Icon" className="absolute z-10 top-[-22%] left-1/2 transform -translate-x-1/2 h-[40%] w-auto" />
+                <img src={Paper} alt="Paper Background" className="absolute top-0 left-0 max-w-[500px] w-full max-h-full h-auto" />
+                <div className="relative z-10 text-[50px] mb-[30px]">{motivation}</div>
+                <div className="relative z-10 text-[30px] mb-[30px]">Score: {score.current}</div>
+                <div className="relative flex justify-between z-10">
+                    <button onClick={restartGame} className="relative">
+                            <img
+                                src={inviteFriendsButton ? inviteFriendsButton.src : ''}
+                                alt="Invite Friends"
+                                className="w-full h-full"
+                            />
+                        <div className="absolute w-full h-full text-black font-bold text-[40px] top-1/2 transform -translate-y-1/2 pt-1" style={{ fontSize: '24px' }}>
+                            Restart
+                        </div>
+                    </button>
+                    <button onClick={() => { backSound.current.play(); window.history.back(); }} className="relative">
+                            <img
+                                src={inviteFriendsButton ? inviteFriendsButton.src : ''}
+                                alt="Invite Friends"
+                                className="w-full h-full"
+                            />
+                        <div className="absolute w-full h-full text-black font-bold text-[40px] top-1/2 transform -translate-y-1/2 pt-1" style={{ fontSize: '24px' }}>
+                        Back
+                        </div>
+                    </button>
                 </div>
-            )}
-            <canvas className="max-w-[100dvw] max-h-[100dvh]" ref={canvasRef} width="550" height="880" />
+            </div>
         </div>
+    )}
+    <canvas className="max-w-[100dvw] h-[100dvh]" ref={canvasRef} width="550" height="1000" />
+</div>
+
     );
 };
 
