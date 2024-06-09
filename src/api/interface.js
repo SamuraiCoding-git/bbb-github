@@ -65,6 +65,7 @@ const api = {
     },
     user: {
         getUser: (id) => get(`/users/get_user/${id}`),
+        getReferralsInfo: (userId) => get(`/users/my_referrals_info/${userId}`),
         getOrCreateUser: (userId, fullName, userData) => post(`/users/get_or_create_user`, { user_id: userId, full_name: fullName, ...userData }),
         countUsers: () => get(`/users/count_users`),
         updateBalance: (userId, amount) => patch(`/users/update_balance/${userId}`, { amount }),
