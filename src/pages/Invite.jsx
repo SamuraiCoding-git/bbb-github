@@ -1,12 +1,11 @@
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import InviteWindow from "../assets/back-paper-M.svg";
 import InviteFriendsButton from "../assets/img/Invite/invite_friends_button.svg";
 import { api } from "../api/interface"
 import { id as userId } from "../utils/TelegramUserData"
-import { HeaderContext } from "../components/Header";
 
 const Invite = () => {
-    const { setIsShowCloseBtn } = useContext(HeaderContext)
+    const [referralsInfo, setRefferalsInfo] = useState({})
 
     const openExternalLink = (link) => {
         if (window.Telegram && window.Telegram.WebApp) {
@@ -20,10 +19,13 @@ const Invite = () => {
     };
 
     useEffect(() => {
-        // Получить количество приглашенных пользователей и поинты с них
-        setIsShowCloseBtn(true)
-
-        return () => { setIsShowCloseBtn(false) }
+        api.user.getReferralsInfo(userId)
+            .then((res)=>{
+                setRefferalsInfo(res)
+            })
+            .catch(()=>{
+                
+            })
     }, [])
 
     return (
@@ -37,11 +39,11 @@ const Invite = () => {
                         <div className="z-20 text-xl relative text-nowrap w-auto px-6 mb-4">
                             <div className="flex flex-row justify-between">
                                 <span>Invited</span>
-                                <span>0</span>
+                                <span>{referralsInfo.invited ?? 0}</span>
                             </div>
                             <div className="flex flex-row justify-between">
                                 <span>Points earned</span>
-                                <span>0</span>
+                                <span>{referralsInfo.points ?? 0}</span>
                             </div>
                         </div>
                         <hr width="95%" color="#313229" className="h-[3px] border-t-0 m-auto rounded-xl" />

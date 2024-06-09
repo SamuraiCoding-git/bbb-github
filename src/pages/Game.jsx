@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useContext } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import BirdImage1 from "../assets/1.svg";
 import BirdImage2 from "../assets/2.svg";
 import BirdImage3 from "../assets/3.svg";
@@ -17,10 +17,11 @@ import DieSound from "../assets/audio/die.wav";
 import MyFont from "../assets/17634.ttf";
 import Paper from "../assets/back-paper-S.png";
 import DeathImage from "../assets/death.png";
-import { HeaderContext } from "../components/Header";
 import InviteFriendsButtonImg from "../assets/img/Invite/invite_friends_button.svg";
 import BackSound from "../assets/audio/back.wav";
 import SelectSound from "../assets/audio/select.wav";
+// import { api } from "../api/interface";
+
 
 const mapFolder = [
     { fg: ForegroundImageClassic, bg: BackgroundImageClassic, pipe: PipeImageClassic, clouds: Clouds, topClouds: TopClouds, colour: "#00cbff" }
@@ -55,8 +56,15 @@ const loadImage = (src, alt) => {
     });
 };
 
+// const getUserId = () => {
+//     if (window.Telegram && window.Telegram.WebApp) {
+//         const tg = window.Telegram.WebApp;
+//         return tg.initDataUnsafe?.user?.id;
+//     }
+//     return null;
+// };
+
 const Game = () => {
-    const { setIsShowCloseBtn } = useContext(HeaderContext);
     const pipeWidth = 100;
     const pipeHeight = 300 * 1.8;
     const birdSize = 100;
@@ -248,6 +256,7 @@ const Game = () => {
         if (score.current < 5) {
             restartGame();
         } else {
+            // api.betaGame.updateRecord(getUserId(), score.current)
             dieSound.current.play();
             deathIconRef.current = { x: birdPosition.current.x, y: birdPosition.current.y };
             setTimeout(() => {
@@ -432,6 +441,7 @@ const Game = () => {
         };
 
         const startGame = () => {
+
             if (!isLoading) {
                 animationFrameRef.current = requestAnimationFrame(gameLoop);
             }
@@ -503,11 +513,6 @@ const Game = () => {
 
         return () => clearInterval(rotationInterval);
     }, [gameState]);
-
-    useEffect(() => {
-        setIsShowCloseBtn(true);
-        return () => { setIsShowCloseBtn(false); };
-    }, [setIsShowCloseBtn]);
 
     useEffect(() => {
         if (gameState === "gameOver") {

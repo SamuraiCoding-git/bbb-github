@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext, useEffect } from 'react';
 import BirdImage from "../assets/1.svg";
 import HeaderImage from "../assets/header.svg";
 import PlayImage from "../assets/play-button.svg";
@@ -8,12 +8,21 @@ import InviteImage from "../assets/invite-button.svg";
 import WalletImage from "../assets/wallet-button.svg";
 import SelectSound from "../assets/audio/select.wav";
 import { useNavigate } from "react-router-dom";
+import { HeaderContext } from './Header/HeaderProvider';
 // import Durov from "./Durov";
 
 const sound = new Audio(SelectSound); // Создаем новый аудио-элемент при каждом нажатии
 
 const GameInterface = () => {
     const navigate = useNavigate();
+
+    const { setIsShowCloseBtn } = useContext(HeaderContext)
+
+    useEffect(() => {
+        setIsShowCloseBtn(false)
+
+        return () => { setIsShowCloseBtn(true) }
+    }, [])
 
     const playSelectSound = () => {
         sound.play();

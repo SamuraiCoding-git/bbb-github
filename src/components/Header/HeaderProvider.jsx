@@ -3,7 +3,7 @@ import { createContext, useMemo, useState } from "react";
 export const HeaderContext = createContext({})
 
 export const HeaderProvider = ({ children }) => {
-    const [isShowCloseBtn, setIsShowCloseBtn] = useState(false)
+    const [isShowCloseBtn, setIsShowCloseBtn] = useState(true)
 
     const defaultProps = useMemo(() => ({
         isShowCloseBtn,
