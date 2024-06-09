@@ -1,13 +1,10 @@
-import { useContext, useEffect, useState } from "react";
+import { useEffect } from "react";
 import InviteWindow from "../assets/back-paper-M.svg";
 import InviteFriendsButton from "../assets/img/Invite/invite_friends_button.svg";
 import { api } from "../api/interface"
 import { id as userId } from "../utils/TelegramUserData"
-import { HeaderContext } from "../components/Header";
 
 const Invite = () => {
-    const { setIsShowCloseBtn } = useContext(HeaderContext)
-
     const openExternalLink = (link) => {
         if (window.Telegram && window.Telegram.WebApp) {
             window.Telegram.WebApp.openLink(link);
@@ -21,9 +18,6 @@ const Invite = () => {
 
     useEffect(() => {
         // Получить количество приглашенных пользователей и поинты с них
-        setIsShowCloseBtn(true)
-
-        return () => { setIsShowCloseBtn(false) }
     }, [])
 
     return (

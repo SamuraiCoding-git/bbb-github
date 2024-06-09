@@ -1,16 +1,9 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useState } from "react";
 import BackPaperImage from "../assets/back-paper-L.svg";
-import { HeaderContext } from "../components/Header";
 
 const Achievements = () => {
-    const { setIsShowCloseBtn } = useContext(HeaderContext)
     const [achivments, setAchivments] = useState([1,2,3,4,5,6])
 
-    useEffect(() => {
-        setIsShowCloseBtn(true)
-
-        return () => { setIsShowCloseBtn(false) }
-    }, [])
 
     return (
         <div className="relative h-screen w-screen">

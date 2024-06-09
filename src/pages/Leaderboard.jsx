@@ -1,16 +1,13 @@
 import BackPaperImage from "../assets/back-paper-L.svg";
 import LeaderboardEggsImage from "../assets/leaderboard-eggs.svg";
-import React, { useEffect, useState, useContext } from "react";
+import React, { useEffect, useState } from "react";
 import { formatName, formatScore, formatPosition } from "../utils/Formaters"
 import { api } from "../api/interface"
 import { id as userId } from "../utils/TelegramUserData"
-import { HeaderContext } from "../components/Header";
 
 const Leaderboard = () => {
     const [topUsers, setTopUsers] = useState([]);
     const [user, setUser] = useState()
-
-    const { setIsShowCloseBtn } = useContext(HeaderContext)
 
     useEffect(() => {
         api.users.getTopFive()
@@ -34,10 +31,6 @@ const Leaderboard = () => {
             .catch(() => {
                 setUser({ username: "You", record: 0, position: 0})
             })
-
-        setIsShowCloseBtn(true)
-
-        return () => { setIsShowCloseBtn(false) }
     }, [])
 
     const topFivetopUsers = topUsers.sort((a, b) => b.score - a.score).slice(0, 5);

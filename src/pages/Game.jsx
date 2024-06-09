@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useContext } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import BirdImage1 from "../assets/1.svg";
 import BirdImage2 from "../assets/2.svg";
 import BirdImage3 from "../assets/3.svg";
@@ -15,7 +15,6 @@ import FlapSound2 from "../assets/flap2.wav";
 import FlapSound3 from "../assets/flap3.wav";
 import DieSound from "../assets/audio/die.wav";
 import MyFont from "../assets/17634.ttf";
-import { HeaderContext } from "../components/Header";
 
 const mapFolder = [
     { fg: ForegroundImageClassic, bg: BackgroundImageClassic, pipe: PipeImageClassic, clouds: Clouds, topClouds: TopClouds, colour: "#00cbff" }
@@ -51,7 +50,6 @@ const loadSound = (src) => {
 };
 
 const Game = () => {
-    const { setIsShowCloseBtn } = useContext(HeaderContext);
     const pipeWidth = 100;
     const pipeHeight = 300;
     const birdSize = 100;
@@ -439,11 +437,6 @@ const Game = () => {
             birdVelocity.current = jumpHeight;
         }
     };
-
-    useEffect(() => {
-        setIsShowCloseBtn(true);
-        return () => { setIsShowCloseBtn(false); };
-    }, [setIsShowCloseBtn]);
 
     if (isLoading) {
         return <div className="loadingScreen" style={{ display: 'flex', width: '100dvw', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#00cbff' }}>Loading...</div>;
