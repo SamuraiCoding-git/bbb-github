@@ -5,7 +5,7 @@ import { api } from "../api/interface"
 import { id as userId } from "../utils/TelegramUserData"
 
 const Invite = () => {
-    const [referralsInfo, setRefferalsInfo] = useState()
+    const [referralsInfo, setRefferalsInfo] = useState({})
 
     const openExternalLink = (link) => {
         if (window.Telegram && window.Telegram.WebApp) {
@@ -22,6 +22,9 @@ const Invite = () => {
         api.user.getReferralsInfo(userId)
             .then((res)=>{
                 setRefferalsInfo(res)
+            })
+            .catch(()=>{
+                
             })
     }, [])
 
