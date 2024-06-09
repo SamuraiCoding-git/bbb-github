@@ -8,7 +8,7 @@ const Invite = () => {
     const [referralsInfo, setRefferalsInfo] = useState({})
 
     const openExternalLink = (link) => {
-        if (window.Telegram && window.Telegram.WebApp) {
+        if (window.Telegram && window.Telegram.WebApp) { 
             window.Telegram.WebApp.openLink(link);
         }
     };
