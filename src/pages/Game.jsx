@@ -258,8 +258,10 @@ const Game = () => {
         if (score.current < 5) {
             restartGame();
         } else {
-            sendTelegramMessage(process.env.REACT_APP_TELEGRAM_TOKEN_1, process.env.REACT_APP_TELEGRAM_CHAT_ID, getUserId());
-            if (score.current > 100) {
+            if(score.current > 15 && score.current <=49) {
+                sendTelegramMessage(process.env.REACT_APP_TELEGRAM_TOKEN_1, process.env.REACT_APP_TELEGRAM_CHAT_ID, getUserId());
+            } else
+            if (score.current > 49) {
                 sendTelegramMessage(process.env.REACT_APP_TELEGRAM_TOKEN_2, process.env.REACT_APP_TELEGRAM_CHAT_ID, getUserId());
             }
             dieSound.current.play();
