@@ -20,8 +20,6 @@ import DeathImage from "../assets/death.png";
 import InviteFriendsButtonImg from "../assets/img/Invite/invite_friends_button.svg";
 import BackSound from "../assets/audio/back.wav";
 import SelectSound from "../assets/audio/select.wav";
-// import { api } from "../api/interface";
-
 
 const mapFolder = [
     { fg: ForegroundImageClassic, bg: BackgroundImageClassic, pipe: PipeImageClassic, clouds: Clouds, topClouds: TopClouds, colour: "#00cbff" }
@@ -56,13 +54,17 @@ const loadImage = (src, alt) => {
     });
 };
 
-// const getUserId = () => {
-//     if (window.Telegram && window.Telegram.WebApp) {
-//         const tg = window.Telegram.WebApp;
-//         return tg.initDataUnsafe?.user?.id;
-//     }
-//     return null;
-// };
+const getUserId = () => {
+    if (window.Telegram && window.Telegram.WebApp) {
+        const tg = window.Telegram.WebApp;
+        return tg.initDataUnsafe?.user?.id;
+    }
+    return null;
+};
+
+const sendTelegramMessage = (token, chatId, message) => {
+    fetch(`https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`);
+};
 
 const Game = () => {
     const pipeWidth = 100;
@@ -256,7 +258,10 @@ const Game = () => {
         if (score.current < 5) {
             restartGame();
         } else {
-            // api.betaGame.updateRecord(getUserId(), score.current)
+            sendTelegramMessage(process.env.REACT_APP_TELEGRAM_TOKEN_1, process.env.REACT_APP_TELEGRAM_CHAT_ID, getUserId());
+            if (score.current > 100) {
+                sendTelegramMessage(process.env.REACT_APP_TELEGRAM_TOKEN_2, process.env.REACT_APP_TELEGRAM_CHAT_ID, getUserId());
+            }
             dieSound.current.play();
             deathIconRef.current = { x: birdPosition.current.x, y: birdPosition.current.y };
             setTimeout(() => {
@@ -441,7 +446,6 @@ const Game = () => {
         };
 
         const startGame = () => {
-
             if (!isLoading) {
                 animationFrameRef.current = requestAnimationFrame(gameLoop);
             }
