@@ -14,10 +14,13 @@ const Achievements = () => {
         {id: 6, img: "public/", name: "wait the game", done: false}])
 
     useEffect(() => {
-        // api.achievements.getAll()
-        //     .then((res) => {
-        //         setAchivments(res)
-        //     })
+        api.achievements.getAll()
+            .then((res) => {
+                setAchievements(res)
+            })
+            .catch(() => {
+
+            })
     }, [])
 
     return (
@@ -43,7 +46,7 @@ const Achievements = () => {
                                 <div className="pr-2 pl-4 font-bold text-xl">
                                     { achievement.done 
                                         ? <span style={{fontFamily: "Comic Sans MS"}}>{ achievement.name }</span>
-                                        : <span className="text-2xl">............................................................?</span>
+                                        : <span className="text-2xl">.................................................?</span>
                                     }
                                     
                                 </div>

@@ -54,78 +54,75 @@ const loadImage = (src, alt) => {
     });
 };
 
-const getUserId = () => {
-    if (window.Telegram && window.Telegram.WebApp) {
-        const tg = window.Telegram.WebApp;
-        return tg.initDataUnsafe?.user?.id;
-    }
-    return null;
+let assets = {
+    birdImgs: [],
+    foreground: null,
+    background: null,
+    clouds: null,
+    topClouds: null,
+    pipe: null,
+    birdSoulImg: null
 };
 
-const sendTelegramMessage = (token, chatId, message) => {
-    fetch(`https://api.telegram.org/bot${token}/sendMessage?chat_id=${chatId}&text=${encodeURIComponent(message)}`);
-};
+const pipeWidth = 100;
+const pipeHeight = 300 * 1.8;
+const BIRD_SIZE = 100;
+const initialBirdSize = BIRD_SIZE * 2;
+const gravity = 0.4;
+const jumpHeight = -8;
+const gapHeight = 200;
+const initialBirdPosition = { x: 275, y: 400 };
+const initialPipeSpeed = 4;
+const initialGroundSpeed = 2;
+const initialCloudsSpeed = initialGroundSpeed / 2;
+const parallaxMax = 30;
+const maxScoreForMaxSpeed = 1000;
+const maxSpeedMultiplier = 1.4;
+
+let birdAnimationInterval = null;
+let currentBirdAnimationIndex = 0;
+let birdSize = initialBirdSize;
+let birdPosition = {...initialBirdPosition};
+let birdVelocity = 0;
+let birdRotation = 0;
+let rotationInterval;
+let birdSoulPosition = null;
+let birdSoulOpacity = 1;
+
+let pipes = [];
+
+let groundPosition = 0;
+let cloudsPosition = 0;
+
+let score = 0;
+let scoreOpacityRef = 0;
+
+let lastTime = Date.now();
+
+let textY = 200;
+let showText = true;
+
+let hasDiedOnce = false;
+
+let flapSounds = [];
+let dieSound;
+let backSound;
+let selectSound;
+
+let animationFrame = null;
+
+let isInitialMount = true;
+
+let isAnimatingToStart = false;
 
 const Game = () => {
-    const pipeWidth = 100;
-    const pipeHeight = 300 * 1.8;
-    const birdSize = 100;
-    const initialBirdSize = birdSize * 2;
-    const gravity = 0.4;
-    const jumpHeight = -8;
-    const gapHeight = 200;
-    const initialPipeSpeed = 4;
-    const initialGroundSpeed = 2;
-    const initialCloudsSpeed = initialGroundSpeed / 2;
-    const parallaxMax = 30;
-    const maxScoreForMaxSpeed = 1000;
-    const maxSpeedMultiplier = 1.4;
-
     const canvasRef = useRef(null);
-    const birdPosition = useRef({ x: 275, y: 400 });
-    const birdVelocity = useRef(0);
-    const currentBirdIndex = useRef(0);
-    const pipes = useRef([]);
-    const groundPosition = useRef(0);
-    const cloudsPosition = useRef(0);
-    const score = useRef(0);
-    const birdSizeRef = useRef(initialBirdSize);
-    const initialBirdPosition = useRef({ x: 275, y: 400 });
-    const textRef = useRef(200);
-    const animationFrameRef = useRef(null);
-    const lastTimeRef = useRef(Date.now());
-    const isInitialMount = useRef(true);
     const menuRef = useRef(null);
 
     const [gameState, setGameState] = useState("start");
-    const [isAnimating, setIsAnimating] = useState(true);
-    const [textY, setTextY] = useState(200);
-    const [showText, setShowText] = useState(true);
     const [showMenu, setShowMenu] = useState(false);
     const [motivation, setMotivation] = useState("");
-    const [hasDiedOnce, setHasDiedOnce] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
-    const [paperImage, setPaperImage] = useState(null);
-    const [inviteFriendsButton, setInviteFriendsButton] = useState(null);
-    const birdAnimationRef = useRef(null);
-    const deathIconRef = useRef(null);
-    const deathIconOpacityRef = useRef(1);
-    const scoreOpacityRef = useRef(0);
-
-    const dieSound = useRef(null);
-    const flapSounds = useRef([]);
-    const backSound = useRef(null);
-    const selectSound = useRef(null);
-
-    const assetsRef = useRef({
-        birdImgs: [],
-        foreground: null,
-        background: null,
-        clouds: null,
-        topClouds: null,
-        pipe: null,
-        deathIcon: null
-    });
 
     const loadAssets = async () => {
         try {
@@ -135,104 +132,69 @@ const Game = () => {
             const clouds = await loadImage(mapFolder[assetsIndex].clouds, "Clouds Image");
             const topClouds = await loadImage(mapFolder[assetsIndex].topClouds, "Top Clouds Image");
             const pipe = await loadImage(mapFolder[assetsIndex].pipe, "Pipe Image");
-            const paper = await loadImage(Paper, "Paper Background");
-            const deathIcon = await loadImage(DeathImage, "Death Icon");
-            const inviteButton = await loadImage(InviteFriendsButtonImg, "Invite Friends Button");
+            const birdSoulImg = await loadImage(DeathImage, "Death Icon");
 
-            flapSounds.current = soundSources.slice(0, 3).map(src => {
+            flapSounds = soundSources.slice(0, 3).map(src => {
                 const sound = new Audio(src);
                 sound.preload = 'auto';
                 return sound;
             });
-            dieSound.current = new Audio(soundSources[3]);
-            dieSound.current.preload = 'auto';
+            dieSound = new Audio(soundSources[3]);
+            dieSound.preload = 'auto';
 
-            backSound.current = new Audio(soundSources[4]);
-            backSound.current.preload = 'auto';
+            backSound = new Audio(soundSources[4]);
+            backSound.preload = 'auto';
 
-            selectSound.current = new Audio(soundSources[5]);
-            selectSound.current.preload = 'auto';
+            selectSound = new Audio(soundSources[5]);
+            selectSound.preload = 'auto';
 
-            assetsRef.current = { birdImgs, foreground, background, clouds, topClouds, pipe, deathIcon };
-            setPaperImage(paper);
-            setInviteFriendsButton(inviteButton);
+            assets = { birdImgs, foreground, background, clouds, topClouds, pipe, birdSoulImg };
             setIsLoading(false);
         } catch (error) {
             console.error('Error loading assets:', error);
         }
     };
 
-    useEffect(() => {
-        if (isInitialMount.current) {
-            loadAssets();
-            isInitialMount.current = false;
-        }
-    }, []);
-
-    useEffect(() => {
-        if (!isLoading) {
-            initializeGame();
-            if (animationFrameRef.current) {
-                cancelAnimationFrame(animationFrameRef.current);
-            }
-            lastTimeRef.current = Date.now();
-        }
-    }, [isLoading]);
-
-    useEffect(() => {
-        if (!isLoading && (gameState === "start" || gameState === "playing")) {
-            birdAnimationRef.current = setInterval(() => {
-                currentBirdIndex.current = (currentBirdIndex.current + 1) % birdImages.length;
-            }, gameState === "start" ? 100 : 50);
-        } else {
-            clearInterval(birdAnimationRef.current);
-        }
-
-        return () => clearInterval(birdAnimationRef.current);
-    }, [gameState, isLoading]);
-
     const initializeGame = () => {
-        scoreOpacityRef.current = 0;
-        pipes.current = [];
-        birdPosition.current = { x: 275, y: 400 };
-        birdVelocity.current = 0;
-        currentBirdIndex.current = 0;
-        score.current = 0;
-        groundPosition.current = 0;
-        cloudsPosition.current = 0;
-        birdSizeRef.current = initialBirdSize;
-        initialBirdPosition.current = { x: 275, y: 400 };
-        lastTimeRef.current = Date.now();
-        deathIconRef.current = null;
-        deathIconOpacityRef.current = 1;
+        textY = 200;
+        showText = true;
+        scoreOpacityRef = 0;
+        pipes = [];
+        birdPosition = {...initialBirdPosition};
+        birdVelocity = 0;
+        birdRotation = 0;
+        birdSize = initialBirdSize;
+        currentBirdAnimationIndex = 0;
+        score = 0;
+        groundPosition = 0;
+        cloudsPosition = 0;
+        lastTime = Date.now();
+        birdSoulPosition = null;
+        birdSoulOpacity = 1;
     };
 
     const restartGame = () => {
-        selectSound.current.play();
-        setHasDiedOnce(true);
+        selectSound.play();
+        hasDiedOnce = true;
         initializeGame();
         setGameState("start");
-        setIsAnimating(true);
-        setTextY(200);
-        textRef.current = 200;
-        setShowText(true);
         setShowMenu(false);
         setMotivation("");
-        if (animationFrameRef.current) {
-            cancelAnimationFrame(animationFrameRef.current);
+        if (animationFrame) {
+            cancelAnimationFrame(animationFrame);
         }
     };
 
     const checkCollision = () => {
-        const birdRadius = birdSize / 2;
-        const birdX = birdPosition.current.x + birdRadius;
-        const birdY = birdPosition.current.y + birdRadius;
+        const birdRadius = BIRD_SIZE / 2;
+        const birdX = birdPosition.x + birdRadius;
+        const birdY = birdPosition.y + birdRadius;
 
         if (birdY + birdRadius > canvasRef.current.height - 100) {
             return true;
         }
 
-        for (let pipe of pipes.current) {
+        for (let pipe of pipes) {
             const pipeCenterX = pipe.x + pipeWidth / 2;
             const pipeY = pipe.y;
             const adjustedPipeWidth = pipeWidth * 0.30;
@@ -255,23 +217,109 @@ const Game = () => {
     };
 
     const handleGameOver = () => {
-        if (score.current < 5) {
-            restartGame();
-        } else {
-            if(score.current > 15 && score.current <=49) {
-                sendTelegramMessage(process.env.REACT_APP_TELEGRAM_TOKEN_1, process.env.REACT_APP_TELEGRAM_CHAT_ID, getUserId());
-            } else
-            if (score.current > 49) {
-                sendTelegramMessage(process.env.REACT_APP_TELEGRAM_TOKEN_2, process.env.REACT_APP_TELEGRAM_CHAT_ID, getUserId());
+        dieSound.play();
+        birdSoulPosition = {...birdPosition};
+        setTimeout(() => {
+            setMotivation(motivationalPhrases[Math.floor(Math.random() * motivationalPhrases.length)]);
+            setShowMenu(true);
+        }, 1000);
+    };
+
+    const handleJump = () => {
+        if (isAnimatingToStart) return;
+        if (gameState === "gameOver") return;
+        if (gameState === "start") {
+            const targetX = 150;
+            const startX = birdPosition.x;
+            const animationSteps = 60;
+            const stepX = (targetX - startX) / animationSteps;
+            const stepSize = (BIRD_SIZE - birdSize) / animationSteps;
+            const textStepY = (canvasRef.current.height + 200) / animationSteps;
+            let step = 0;
+
+            const animateBird = () => {
+                if (step < animationSteps) {
+                    birdPosition.x += stepX;
+                    birdSize += stepSize;
+                    textY -= textStepY;
+                    step++;
+                    requestAnimationFrame(animateBird);
+                } else {
+                    birdPosition = { x: 150, y: 400 };
+                    birdSize = BIRD_SIZE;
+                    showText = false;
+                    setGameState("playing");
+                    isAnimatingToStart = false;
+                }
+            };
+            isAnimatingToStart = true;
+            animateBird();
+        } else if (gameState === "playing") {
+            if (birdAnimationInterval) {
+                clearInterval(birdAnimationInterval);
             }
-            dieSound.current.play();
-            deathIconRef.current = { x: birdPosition.current.x, y: birdPosition.current.y };
-            setTimeout(() => {
-                setMotivation(motivationalPhrases[Math.floor(Math.random() * motivationalPhrases.length)]);
-                setShowMenu(true);
-            }, 1000);
+            birdAnimationInterval = setInterval(() => {
+                currentBirdAnimationIndex = (currentBirdAnimationIndex + 1) % birdImages.length;
+                if (currentBirdAnimationIndex === birdImages.length - 1) {
+                    clearInterval(birdAnimationInterval);
+                }
+            }, 50);
+            const randomFlapSound = flapSounds[Math.floor(Math.random() * flapSounds.length)];
+            randomFlapSound.play();
+            birdVelocity = jumpHeight;
+            birdRotation = -15;
         }
     };
+
+    useEffect(() => {
+        if (isInitialMount) {
+            loadAssets();
+            isInitialMount = false;
+        }
+        return () => {
+            isInitialMount = true;
+            hasDiedOnce = false;
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!isLoading) {
+            initializeGame();
+            if (animationFrame) {
+                cancelAnimationFrame(animationFrame);
+            }
+            lastTime = Date.now();
+        }
+    }, [isLoading]);
+
+    useEffect(() => {
+        if (gameState === "gameOver") {
+            handleGameOver();
+        }
+
+        if (gameState === "playing") {
+            rotationInterval = setInterval(() => {
+                if (birdRotation < 45) {
+                    birdRotation += 1;
+                }
+            }, 20);
+            
+            return () => clearInterval(rotationInterval);
+        }
+
+    }, [gameState]);
+
+    useEffect(() => {
+        if (!isLoading && (gameState === "start" || gameState === "playing")) {
+            birdAnimationInterval = setInterval(() => {
+                currentBirdAnimationIndex = (currentBirdAnimationIndex + 1) % birdImages.length;
+            }, gameState === "start" ? 100 : 50);
+        } else {
+            clearInterval(birdAnimationInterval);
+        }
+
+        return () => clearInterval(birdAnimationInterval);
+    }, [gameState, isLoading]);
 
     useEffect(() => {
         setTimeout(() => {
@@ -296,52 +344,52 @@ const Game = () => {
 
             const context = canvas.getContext('2d');
 
-            const { birdImgs, foreground, background, clouds, topClouds, pipe, deathIcon } = assetsRef.current;
+            const { birdImgs, foreground, background, clouds, topClouds, pipe, birdSoulImg } = assets;
 
             const now = Date.now();
-            const deltaTime = (now - lastTimeRef.current) / 1000;
-            lastTimeRef.current = now;
+            const deltaTime = (now - lastTime) / 1000;
+            lastTime = now;
 
             updateGameLogic(deltaTime);
-            drawGame(context, birdImgs, foreground, background, clouds, topClouds, pipe, deathIcon);
-            if (gameState !== "gameOver" || birdPosition.current.y < canvas.height) {
-                animationFrameRef.current = requestAnimationFrame(gameLoop);
+            drawGame(context, birdImgs, foreground, background, clouds, topClouds, pipe, birdSoulImg);
+            if (gameState !== "gameOver" || birdPosition.y < canvas.height) {
+                animationFrame = requestAnimationFrame(gameLoop);
             }
         };
 
         const updateGameLogic = (deltaTime) => {
-            const speedMultiplier = 1 + (maxSpeedMultiplier - 1) * Math.min(score.current / maxScoreForMaxSpeed, 1);
+            const speedMultiplier = 1 + (maxSpeedMultiplier - 1) * Math.min(score / maxScoreForMaxSpeed, 1);
 
             const pipeSpeed = initialPipeSpeed * speedMultiplier;
             const groundSpeed = initialGroundSpeed * speedMultiplier;
             const cloudsSpeed = initialCloudsSpeed * speedMultiplier;
 
             if (gameState === "start" || gameState === "gameOver") {
-                groundPosition.current = (groundPosition.current - groundSpeed * deltaTime * 60) % canvasRef.current.width;
-                cloudsPosition.current = (cloudsPosition.current - cloudsSpeed * deltaTime * 60) % canvasRef.current.width;
+                groundPosition = (groundPosition - groundSpeed * deltaTime * 60) % canvasRef.current.width;
+                cloudsPosition = (cloudsPosition - cloudsSpeed * deltaTime * 60) % canvasRef.current.width;
             }
 
             if (gameState === "gameOver") {
-                birdVelocity.current += gravity * deltaTime * 60;
-                birdPosition.current.y += birdVelocity.current * deltaTime * 60;
-                birdPosition.current.x -= 2 * deltaTime * 60;
-                if (birdPosition.current.y >= canvasRef.current.height - birdSize / 2) {
-                    cancelAnimationFrame(animationFrameRef.current);
+                birdVelocity += gravity * deltaTime * 60;
+                birdPosition.y += birdVelocity * deltaTime * 60;
+                birdPosition.x -= 2 * deltaTime * 60;
+                if (birdPosition.y >= canvasRef.current.height - BIRD_SIZE / 2) {
+                    cancelAnimationFrame(animationFrame);
                 }
-                if (deathIconRef.current) {
-                    deathIconRef.current.y -= 2 * deltaTime * 60;
-                    deathIconOpacityRef.current -= deltaTime * 2;
+                if (birdSoulPosition) {
+                    birdSoulPosition.y -= 2 * deltaTime * 60;
+                    birdSoulOpacity -= deltaTime * 2;
                 }
                 return;
             }
 
             if (gameState !== "playing") return;
 
-            birdVelocity.current += gravity * deltaTime * 60;
-            birdPosition.current.y += birdVelocity.current * deltaTime * 60;
+            birdVelocity += gravity * deltaTime * 60;
+            birdPosition.y += birdVelocity * deltaTime * 60;
 
             if (checkCollision()) {
-                if (score.current < 5) {
+                if (score < 5) {
                     restartGame();
                 } else {
                     setGameState("gameOver");
@@ -349,44 +397,44 @@ const Game = () => {
                 return;
             }
 
-            if (pipes.current.length === 0 || pipes.current[pipes.current.length - 1].x < canvasRef.current.width - 400) {
+            if (pipes.length === 0 || pipes[pipes.length - 1].x < canvasRef.current.width - 400) {
                 const newPipeY = canvasRef.current.height - pipeHeight + -100 + Math.floor(Math.random() * 401);
-                pipes.current.push({ x: canvasRef.current.width, y: newPipeY });
+                pipes.push({ x: canvasRef.current.width, y: newPipeY });
             }
 
-            pipes.current = pipes.current.map(pipe => {
+            pipes = pipes.map(pipe => {
                 pipe.x -= pipeSpeed * deltaTime * 60;
-                if (!pipe.passed && pipe.x + pipeWidth < birdPosition.current.x + birdSize) {
+                if (!pipe.passed && pipe.x + pipeWidth < birdPosition.x + BIRD_SIZE) {
                     pipe.passed = true;
-                    score.current += 1;
+                    score += 1;
                 }
                 return pipe;
             });
 
-            if (pipes.current.length > 0 && pipes.current[0].x < -pipeWidth) {
-                pipes.current.shift();
+            if (pipes.length > 0 && pipes[0].x < -pipeWidth) {
+                pipes.shift();
             }
 
-            groundPosition.current = (groundPosition.current - groundSpeed * deltaTime * 60) % canvasRef.current.width;
-            cloudsPosition.current = (cloudsPosition.current - cloudsSpeed * deltaTime * 60) % canvasRef.current.width;
+            groundPosition = (groundPosition - groundSpeed * deltaTime * 60) % canvasRef.current.width;
+            cloudsPosition = (cloudsPosition - cloudsSpeed * deltaTime * 60) % canvasRef.current.width;
 
-            if (gameState === "playing" && scoreOpacityRef.current < 1) {
-                scoreOpacityRef.current = Math.min(scoreOpacityRef.current + deltaTime, 1);
+            if (gameState === "playing" && scoreOpacityRef < 1) {
+                scoreOpacityRef = Math.min(scoreOpacityRef + deltaTime, 1);
             }
         };
 
-        const drawGame = (context, birdImgs, foreground, background, clouds, topClouds, pipe, deathIcon) => {
+        const drawGame = (context, birdImgs, foreground, background, clouds, topClouds, pipe, birdSoulImg) => {
             context.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
 
-            const parallaxOffset = parallaxMax * (birdPosition.current.y / canvasRef.current.height - 0.5);
+            const parallaxOffset = canvasRef.current.height - 220 + parallaxMax * (birdPosition.y / canvasRef.current.height - 0.5);
             const backgroundWidth = canvasRef.current.width * 1.05;
-            const backgroundHeight = (canvasRef.current.height - 100) * 1.05;
+            const backgroundHeight = backgroundWidth / 4;
             context.drawImage(background, 0, parallaxOffset, backgroundWidth, backgroundHeight);
 
-            context.drawImage(clouds, cloudsPosition.current, 40, canvasRef.current.width + 5, 200);
-            context.drawImage(clouds, cloudsPosition.current + canvasRef.current.width, 40, canvasRef.current.width + 5, 200);
+            context.drawImage(clouds, cloudsPosition, 40, canvasRef.current.width + 5, 200);
+            context.drawImage(clouds, cloudsPosition + canvasRef.current.width, 40, canvasRef.current.width + 5, 200);
 
-            pipes.current.forEach((pipeData) => {
+            pipes.forEach((pipeData) => {
                 context.save();
                 context.translate(pipeData.x + pipeWidth / 2, pipeData.y - gapHeight - pipeHeight);
                 context.rotate(Math.PI);
@@ -395,15 +443,15 @@ const Game = () => {
                 context.drawImage(pipe, pipeData.x, pipeData.y, pipeWidth, pipeHeight);
             });
 
-            context.drawImage(foreground, groundPosition.current, canvasRef.current.height - 100, canvasRef.current.width + 5, 100);
-            context.drawImage(foreground, groundPosition.current + canvasRef.current.width, canvasRef.current.height - 100, canvasRef.current.width, 100);
+            context.drawImage(foreground, groundPosition, canvasRef.current.height - 100, canvasRef.current.width + 5, 100);
+            context.drawImage(foreground, groundPosition + canvasRef.current.width, canvasRef.current.height - 100, canvasRef.current.width, 100);
 
-            if (isAnimating) {
+            if (gameState === "start") {
                 const animationYOffset = 15 * Math.sin((Date.now() / 200) % (2 * Math.PI));
                 context.save();
-                context.translate(initialBirdPosition.current.x, initialBirdPosition.current.y + animationYOffset);
+                context.translate(birdPosition.x, birdPosition.y + animationYOffset);
                 context.rotate(0);
-                context.drawImage(birdImgs[currentBirdIndex.current], -birdSizeRef.current / 2, -birdSizeRef.current / 2, birdSizeRef.current, birdSizeRef.current);
+                context.drawImage(birdImgs[currentBirdAnimationIndex], -birdSize / 2, -birdSize / 2, birdSize, birdSize);
                 context.restore();
 
                 if (showText) {
@@ -414,135 +462,72 @@ const Game = () => {
                     const startText = hasDiedOnce ? "Try again!" : "TAP to start!";
                     const startTextWidth = context.measureText(startText).width;
                     const startTextX = canvasRef.current.width / 2 - startTextWidth / 2;
-                    const startTextY = textRef.current + 450;
+                    const startTextY = textY + 450;
                     context.strokeText(startText, startTextX, startTextY);
                     context.fillText(startText, startTextX, startTextY);
                 }
             } else {
                 context.save();
-                context.translate(birdPosition.current.x + birdSize / 2, birdPosition.current.y + birdSize / 2);
-                context.rotate((Math.PI / 180) * birdRotation.current);
-                context.drawImage(birdImgs[currentBirdIndex.current], -birdSize / 2, -birdSize / 2, birdSize, birdSize);
+                context.translate(birdPosition.x + BIRD_SIZE / 2, birdPosition.y + BIRD_SIZE / 2);
+                context.rotate((Math.PI / 180) * birdRotation);
+                context.drawImage(birdImgs[currentBirdAnimationIndex], -BIRD_SIZE / 2, -BIRD_SIZE / 2, BIRD_SIZE, BIRD_SIZE);
                 context.restore();
             }
 
-            if (deathIconRef.current && deathIconOpacityRef.current > 0) {
+            if (birdSoulPosition && birdSoulOpacity > 0) {
                 context.save();
-                context.globalAlpha = deathIconOpacityRef.current;
-                context.drawImage(deathIcon, deathIconRef.current.x, deathIconRef.current.y, 50, 50);
+                context.globalAlpha = birdSoulOpacity;
+                context.drawImage(birdSoulImg, birdSoulPosition.x, birdSoulPosition.y, 50, 50);
                 context.restore();
             }
 
-            context.drawImage(topClouds, groundPosition.current, -50, canvasRef.current.width + 5, 150);
-            context.drawImage(topClouds, groundPosition.current + canvasRef.current.width, -50, canvasRef.current.width + 5, 150);
+            context.drawImage(topClouds, groundPosition, -50, canvasRef.current.width + 5, 150);
+            context.drawImage(topClouds, groundPosition + canvasRef.current.width, -50, canvasRef.current.width + 5, 150);
 
             context.font = "60px MyFont";
-            context.fillStyle = `rgba(255, 255, 255, ${scoreOpacityRef.current})`;
-            context.strokeStyle = `rgba(0, 0, 0, ${scoreOpacityRef.current})`;
+            context.fillStyle = `rgba(255, 255, 255, ${scoreOpacityRef})`;
+            context.strokeStyle = `rgba(0, 0, 0, ${scoreOpacityRef})`;
             context.lineWidth = 6;
-            context.strokeText(`Score: ${score.current}`, canvasRef.current.width / 2 - context.measureText(`Score: ${score.current}`).width / 2, 60);
-            context.fillText(`Score: ${score.current}`, canvasRef.current.width / 2 - context.measureText(`Score: ${score.current}`).width / 2, 60);
+            context.strokeText(`Score: ${score}`, canvasRef.current.width / 2 - context.measureText(`Score: ${score}`).width / 2, 60);
+            context.fillText(`Score: ${score}`, canvasRef.current.width / 2 - context.measureText(`Score: ${score}`).width / 2, 60);
 
-            context.drawImage(foreground, groundPosition.current, canvasRef.current.height - 100, canvasRef.current.width + 5, 100);
-            context.drawImage(foreground, groundPosition.current + canvasRef.current.width, canvasRef.current.height - 100, canvasRef.current.width, 100);
+            context.drawImage(foreground, groundPosition, canvasRef.current.height - 100, canvasRef.current.width + 5, 100);
+            context.drawImage(foreground, groundPosition + canvasRef.current.width, canvasRef.current.height - 100, canvasRef.current.width, 100);
         };
 
         const startGame = () => {
             if (!isLoading) {
-                animationFrameRef.current = requestAnimationFrame(gameLoop);
+                animationFrame = requestAnimationFrame(gameLoop);
             }
         };
 
         startGame();
 
         return () => {
-            if (animationFrameRef.current) {
-                cancelAnimationFrame(animationFrameRef.current);
+            if (animationFrame) {
+                cancelAnimationFrame(animationFrame);
             }
-            clearInterval(birdAnimationRef.current);
+            clearInterval(birdAnimationInterval);
         };
-    }, [gameState, isAnimating, showText, hasDiedOnce, isLoading]);
-
-    const birdRotation = useRef(0);
-
-    const handleJump = () => {
-        if (gameState === "gameOver") return;
-        if (gameState === "start") {
-            const targetX = 150;
-            const startX = initialBirdPosition.current.x;
-            const animationSteps = 60;
-            const stepX = (targetX - startX) / animationSteps;
-            const stepSize = (birdSize - birdSizeRef.current) / animationSteps;
-            const textStepY = (canvasRef.current.height + 200) / animationSteps;
-            let step = 0;
-
-            const animateBird = () => {
-                if (step < animationSteps) {
-                    initialBirdPosition.current.x += stepX;
-                    birdSizeRef.current += stepSize;
-                    textRef.current -= textStepY;
-                    setTextY(textRef.current);
-                    step++;
-                    requestAnimationFrame(animateBird);
-                } else {
-                    birdPosition.current = { x: 150, y: 400 };
-                    birdSizeRef.current = birdSize;
-                    setIsAnimating(false);
-                    setShowText(false);
-                    setGameState("playing");
-                }
-            };
-            animateBird();
-        } else if (gameState === "playing") {
-            if (birdAnimationRef.current) {
-                clearInterval(birdAnimationRef.current);
-            }
-            birdAnimationRef.current = setInterval(() => {
-                currentBirdIndex.current = (currentBirdIndex.current + 1) % birdImages.length;
-                if (currentBirdIndex.current === birdImages.length - 1) {
-                    clearInterval(birdAnimationRef.current);
-                }
-            }, 50);
-            const randomFlapSound = flapSounds.current[Math.floor(Math.random() * flapSounds.current.length)];
-            randomFlapSound.play();
-            birdVelocity.current = jumpHeight;
-            birdRotation.current = -15;
-        }
-    };
-
-    useEffect(() => {
-        const rotationInterval = setInterval(() => {
-            if (gameState === "playing" && birdRotation.current < 45) {
-                birdRotation.current += 1;
-            }
-        }, 20);
-
-        return () => clearInterval(rotationInterval);
-    }, [gameState]);
-
-    useEffect(() => {
-        if (gameState === "gameOver") {
-            handleGameOver();
-        }
-    }, [gameState]);
+    }, [gameState, isLoading]);
 
     if (isLoading) {
         return <div className="loadingScreen" style={{ color: "#fff", fontSize: '40px', display: 'flex', width: '100dvw', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#00cbff' }}>Loading...</div>;
     }
 
     return (
-        <div className="gameWrapper w-[100dvw] h-[100dvh] max-h-screen flex justify-center items-end bg-[#00cbff]" onClick={handleJump}>
+        <div className="gameWrapper w-[100dvw] h-[100dvh] max-h-screen flex justify-center items-end bg-[#7CCEFE]" onTouchStart={handleJump} onMouseDown={handleJump}>
     {showMenu && (
         <div className="backgroundgBlur w-[100dvw] h-[100dvh] backdrop-blur-sm absolute">
             <div ref={menuRef} className="gameOver duration-1000 absolute top-[150%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 max-w-[500px] w-[80dvw] h-auto p-[5vmin] pt-[10vmin] text-black flex flex-col items-center justify-center transition-all ease-in-out">
                 <img src={DeathImage} alt="Death Icon" className="absolute z-10 top-[-22%] left-1/2 transform -translate-x-1/2 h-[40%] w-auto" />
                 <img src={Paper} alt="Paper Background" className="absolute top-0 left-0 max-w-[500px] w-full max-h-full h-auto" />
                 <div className="relative z-10 text-[50px] mb-[30px] text-center">{motivation}</div>
-                <div className="relative z-10 text-[30px] mb-[30px]">Score: {score.current}</div>
+                <div className="relative z-10 text-[30px] mb-[30px]">Score: {score}</div>
                 <div className="relative flex justify-between z-10">
                     <button onClick={restartGame} className="relative">
                             <img
-                                src={inviteFriendsButton ? inviteFriendsButton.src : ''}
+                                src={InviteFriendsButtonImg}
                                 alt="Invite Friends"
                                 className="w-full h-full"
                             />
@@ -550,9 +535,9 @@ const Game = () => {
                             Restart
                         </div>
                     </button>
-                    <button onClick={() => { backSound.current.play(); window.history.back(); }} className="relative">
+                    <button onClick={() => { backSound.play(); window.history.back(); }} className="relative">
                             <img
-                                src={inviteFriendsButton ? inviteFriendsButton.src : ''}
+                                src={InviteFriendsButtonImg}
                                 alt="Invite Friends"
                                 className="w-full h-full"
                             />
