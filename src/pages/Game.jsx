@@ -38,6 +38,21 @@ const motivationalPhrases = [
     "Nice $Balls"
 ];
 
+const assetLoadingNames = [
+    "CALLING DUROV",
+    "BREAKING INTO TELEGRAM'S OFFICE",
+    "MEASURES $BALLS",
+    "NICE $BALLS BRO",
+    "CYBERPUNK BIRDS?",
+    "WHO IS MR. PIROJHOK?",
+    "AND THE WORD WAS $BALLS",
+    "BUILDING CITIES AND NESTS",
+    "CREATING SKY",
+    "LOADING TERRAIN",
+    "CHILLING... OH NO JUST KIDDING",
+    "ALMOST DONE!"
+];
+
 const soundSources = [FlapSound1, FlapSound2, FlapSound3, DieSound, BackSound, SelectSound];
 
 const loadImage = (src, alt) => {
@@ -123,16 +138,33 @@ const Game = () => {
     const [showMenu, setShowMenu] = useState(false);
     const [motivation, setMotivation] = useState("");
     const [isLoading, setIsLoading] = useState(true);
+    const [loadingProgress, setLoadingProgress] = useState(0);
+    const [loadingAsset, setLoadingAsset] = useState("");
 
     const loadAssets = async () => {
+        const assetsToLoad = [
+            { src: BirdImage1, name: "Bird Image 1" },
+            { src: BirdImage2, name: "Bird Image 2" },
+            { src: BirdImage3, name: "Bird Image 3" },
+            { src: BirdImage4, name: "Bird Image 4" },
+            { src: BirdImage5, name: "Bird Image 5" },
+            { src: BirdImage6, name: "Bird Image 6" },
+            { src: mapFolder[assetsIndex].fg, name: "Foreground Image" },
+            { src: mapFolder[assetsIndex].bg, name: "Background Image" },
+            { src: mapFolder[assetsIndex].clouds, name: "Clouds Image" },
+            { src: mapFolder[assetsIndex].topClouds, name: "Top Clouds Image" },
+            { src: mapFolder[assetsIndex].pipe, name: "Pipe Image" },
+            { src: DeathImage, name: "Death Icon" }
+        ];
+
         try {
-            const birdImgs = await Promise.all(birdImages.map((img, index) => loadImage(img, `Bird Image ${index + 1}`)));
-            const foreground = await loadImage(mapFolder[assetsIndex].fg, "Foreground Image");
-            const background = await loadImage(mapFolder[assetsIndex].bg, "Background Image");
-            const clouds = await loadImage(mapFolder[assetsIndex].clouds, "Clouds Image");
-            const topClouds = await loadImage(mapFolder[assetsIndex].topClouds, "Top Clouds Image");
-            const pipe = await loadImage(mapFolder[assetsIndex].pipe, "Pipe Image");
-            const birdSoulImg = await loadImage(DeathImage, "Death Icon");
+            let loadedAssets = {};
+            for (let i = 0; i < assetsToLoad.length; i++) {
+                setLoadingAsset(assetLoadingNames[i]);
+                const img = await loadImage(assetsToLoad[i].src, assetsToLoad[i].name);
+                loadedAssets[assetsToLoad[i].name.replace(/ /g, '').toLowerCase()] = img;
+                setLoadingProgress(((i + 1) / assetsToLoad.length) * 100);
+            }
 
             flapSounds = soundSources.slice(0, 3).map(src => {
                 const sound = new Audio(src);
@@ -148,7 +180,22 @@ const Game = () => {
             selectSound = new Audio(soundSources[5]);
             selectSound.preload = 'auto';
 
-            assets = { birdImgs, foreground, background, clouds, topClouds, pipe, birdSoulImg };
+            assets = {
+                birdImgs: [
+                    loadedAssets.birdimage1,
+                    loadedAssets.birdimage2,
+                    loadedAssets.birdimage3,
+                    loadedAssets.birdimage4,
+                    loadedAssets.birdimage5,
+                    loadedAssets.birdimage6
+                ],
+                foreground: loadedAssets.foregroundimage,
+                background: loadedAssets.backgroundimage,
+                clouds: loadedAssets.cloudsimage,
+                topClouds: loadedAssets.topcloudsimage,
+                pipe: loadedAssets.pipeimage,
+                birdSoulImg: loadedAssets.deathicon
+            };
             setIsLoading(false);
         } catch (error) {
             console.error('Error loading assets:', error);
@@ -346,6 +393,11 @@ const Game = () => {
 
             const { birdImgs, foreground, background, clouds, topClouds, pipe, birdSoulImg } = assets;
 
+            if (!birdImgs.length || !foreground || !background || !clouds || !topClouds || !pipe || !birdSoulImg) {
+                console.error("Some assets are not loaded properly.");
+                return;
+            }
+
             const now = Date.now();
             const deltaTime = (now - lastTime) / 1000;
             lastTime = now;
@@ -512,37 +564,46 @@ const Game = () => {
     }, [gameState, isLoading]);
 
     if (isLoading) {
-        return <div className="loadingScreen" style={{ color: "#fff", fontSize: '40px', display: 'flex', width: '100dvw', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#00cbff' }}>Loading...</div>;
+        return (
+            <div className="loadingScreen" style={{ color: "#fff", fontSize: '40px', display: 'flex', width: '100dvw', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#7CCEFE', flexDirection: 'column' }}>
+                <div style={{ fontFamily: 'MyFont', marginBottom: '20px' }}>{loadingAsset}</div>
+                <div style={{ width: '550px', backgroundColor: '#ddd', borderRadius: '10px', overflow: 'hidden' }}>
+                    <div style={{ width: `${loadingProgress}%`, height: '20px', backgroundColor: '#4caf50' }}></div>
+                </div>
+            </div>
+        );
     }
 
     return (
         <div className="gameWrapper w-[100dvw] h-[100dvh] max-h-screen flex justify-center items-end bg-[#7CCEFE]" onMouseDown={handleJump}>
     {showMenu && (
         <div className="backgroundgBlur w-[100dvw] h-[100dvh] backdrop-blur-sm absolute">
-            <div ref={menuRef} className="gameOver duration-1000 absolute top-[150%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 max-w-[500px] w-[80dvw] h-auto p-[5vmin] pt-[10vmin] text-black flex flex-col items-center justify-center transition-all ease-in-out">
+            <div ref={menuRef} className="gameOver duration-1000 absolute top-[150%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 max-w-[500px] w-[80dvw] h-auto pb-[3vmin] px-[2vmin] pt-[10vmin] text-black flex flex-col items-center justify-center transition-all ease-in-out">
                 <img src={DeathImage} alt="Death Icon" className="absolute z-10 top-[-22%] left-1/2 transform -translate-x-1/2 h-[40%] w-auto" />
-                <img src={Paper} alt="Paper Background" className="absolute top-0 left-0 max-w-[500px] w-full max-h-full h-auto" />
+                <img src={Paper} alt="Paper Background" className="absolute top-0 left-1/2 transform -translate-x-1/2 max-w-[400px] w-full max-h-full h-auto" />
                 <div className="relative z-10 text-[50px] mb-[30px] text-center">{motivation}</div>
                 <div className="relative z-10 text-[30px] mb-[30px]">Score: {score}</div>
-                <div className="relative flex justify-between z-10">
-                    <button onClick={restartGame} className="relative">
-                            <img
-                                src={InviteFriendsButtonImg}
-                                alt="Invite Friends"
-                                className="w-full h-full"
-                            />
-                        <div className="absolute w-full h-full text-black font-bold text-[40px] top-1/2 transform -translate-y-1/2" style={{ fontSize: '24px' }}>
+                <div className="relative flex justify-between z-10 gap-10">
+                    <button onClick={restartGame} className="relative w-32 h-16">
+                        <img
+                            src={InviteFriendsButtonImg}
+                            alt="Invite Friends"
+                            className="absolute top-0 left-0 w-full h-full"
+                            style={{ transform: 'scaleX(1.25) scaleY(1.85)' }}
+                        />
+                        <div className="absolute text-black font-bold text-[50px] top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" style={{ fontSize: '24px' }}>
                             Restart
                         </div>
                     </button>
-                    <button onClick={() => { backSound.play(); window.history.back(); }} className="relative">
-                            <img
-                                src={InviteFriendsButtonImg}
-                                alt="Invite Friends"
-                                className="w-full h-full"
-                            />
-                        <div className="absolute w-full h-full text-black font-bold text-[40px] top-1/2 transform -translate-y-1/2" style={{ fontSize: '24px' }}>
-                        Back
+                    <button onClick={() => { backSound.play(); window.history.back(); }} className="relative w-32 h-16">
+                        <img
+                            src={InviteFriendsButtonImg}
+                            alt="Invite Friends"
+                            className="absolute top-0 left-0 w-full h-full"
+                            style={{ transform: 'scaleX(1.25) scaleY(1.85)' }}
+                        />
+                        <div className="absolute text-black font-bold text-[50px] top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" style={{ fontSize: '24px' }}>
+                            Back
                         </div>
                     </button>
                 </div>
