@@ -516,7 +516,7 @@ const Game = () => {
     }
 
     return (
-        <div className="gameWrapper w-[100dvw] h-[100dvh] max-h-screen flex justify-center items-end bg-[#7CCEFE]" onTouchStart={handleJump} onMouseDown={handleJump}>
+        <div className="gameWrapper w-[100dvw] h-[100dvh] max-h-screen flex justify-center items-end bg-[#7CCEFE]" onMouseDown={handleJump}>
     {showMenu && (
         <div className="backgroundgBlur w-[100dvw] h-[100dvh] backdrop-blur-sm absolute">
             <div ref={menuRef} className="gameOver duration-1000 absolute top-[150%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 max-w-[500px] w-[80dvw] h-auto p-[5vmin] pt-[10vmin] text-black flex flex-col items-center justify-center transition-all ease-in-out">
