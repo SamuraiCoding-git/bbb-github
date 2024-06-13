@@ -8,7 +8,7 @@ export const Header = () => {
     const { isShowCloseBtn } = useContext(HeaderContext)
 
     return (
-        <div className="relative">
+        <div className="relative z-20">
             <BackgroundMusic />
             { isShowCloseBtn && 
                 <CloseButton/>

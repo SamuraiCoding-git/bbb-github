@@ -568,7 +568,7 @@ const Game = () => {
             <div className="loadingScreen" style={{ color: "#fff", fontSize: '40px', display: 'flex', width: '100dvw', justifyContent: 'center', alignItems: 'center', height: '100vh', background: '#7CCEFE', flexDirection: 'column' }}>
                 <div style={{ fontFamily: 'MyFont', marginBottom: '20px' }}>{loadingAsset}</div>
                 <div style={{ width: '550px', backgroundColor: '#ddd', borderRadius: '10px', overflow: 'hidden' }}>
-                    <div style={{ width: `${loadingProgress}%`, height: '20px', backgroundColor: '#4caf50' }}></div>
+                    <div style={{width: `${loadingProgress}%`, height: '20px', background: '#FAE645'}}></div>
                 </div>
             </div>
         );

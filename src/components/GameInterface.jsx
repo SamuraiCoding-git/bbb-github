@@ -9,9 +9,8 @@ import WalletImage from "../assets/wallet-button.svg";
 import SelectSound from "../assets/audio/select.wav";
 import { useNavigate } from "react-router-dom";
 import { HeaderContext } from './Header/HeaderProvider';
-// import Durov from "./Durov";
 
-const sound = new Audio(SelectSound); // Создаем новый аудио-элемент при каждом нажатии
+const sound = new Audio(SelectSound);
 
 const GameInterface = () => {
     const navigate = useNavigate();
